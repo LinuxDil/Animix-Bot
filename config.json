@@ -1,0 +1,25 @@
+{
+  "gacha": true,
+  "achievements": true,
+  "mix": true,
+  "mission": true,
+  "quest": true,
+  "claim_pass": true,
+  "pvp": true,
+  "proxy": false,
+  "thread": 1,
+  "delay_loop": 3000,
+  "delay_account_switch": 10,
+  "pet_mix": [
+    [122, 125],
+    [125, 121],
+    [124, 125],
+    [118, 116],
+    [119, 115],
+    [120, 113]
+  ],
+  "defens_type": "armor",
+  "defens_id": [],
+  "attack_type": "damage",
+  "attack_id": []
+}
