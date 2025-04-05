@@ -1,0 +1,174 @@
+{
+    "error_code": null,
+    "message": null,
+    "result": [
+        {
+            "dna_id": 101,
+            "name": "Dog DNA",
+            "class": "Earth",
+            "star": 2,
+            "can_mom": true
+        },
+        {
+            "dna_id": 102,
+            "name": "Panda DNA",
+            "class": "Earth",
+            "star": 2,
+            "can_mom": true
+        },
+        {
+            "dna_id": 103,
+            "name": "Tiger DNA",
+            "class": "Earth",
+            "star": 2,
+            "can_mom": true
+        },
+        {
+            "dna_id": 104,
+            "name": "Bat DNA",
+            "class": "Wind",
+            "star": 2,
+            "can_mom": true
+        },
+        {
+            "dna_id": 105,
+            "name": "Eagle DNA",
+            "class": "Wind",
+            "star": 2,
+            "can_mom": true
+        },
+        {
+            "dna_id": 106,
+            "name": "Snake DNA",
+            "class": "Water",
+            "star": 2,
+            "can_mom": true
+        },
+        {
+            "dna_id": 107,
+            "name": "Crocodile DNA",
+            "class": "Water",
+            "star": 2,
+            "can_mom": true
+        },
+        {
+            "dna_id": 108,
+            "name": "Whale DNA",
+            "class": "Water",
+            "star": 2,
+            "can_mom": true
+        },
+        {
+            "dna_id": 109,
+            "name": "Butterfly DNA",
+            "class": "Wind",
+            "star": 2,
+            "can_mom": true
+        },
+        {
+            "dna_id": 110,
+            "name": "Tank DNA",
+            "class": "Earth",
+            "star": 3,
+            "can_mom": false
+        },
+        {
+            "dna_id": 111,
+            "name": "Aircraft DNA",
+            "class": "Wind",
+            "star": 3,
+            "can_mom": false
+        },
+        {
+            "dna_id": 112,
+            "name": "Submarine DNA",
+            "class": "Water",
+            "star": 3,
+            "can_mom": false
+        },
+        {
+            "dna_id": 113,
+            "name": "Fire DNA",
+            "class": "Logia",
+            "star": 4,
+            "can_mom": false
+        },
+        {
+            "dna_id": 115,
+            "name": "Ice DNA",
+            "class": "Logia",
+            "star": 4,
+            "can_mom": false
+        },
+        {
+            "dna_id": 116,
+            "name": "Plant DNA",
+            "class": "Logia",
+            "star": 4,
+            "can_mom": false
+        },
+        {
+            "dna_id": 117,
+            "name": "Lightning DNA",
+            "class": "Logia",
+            "star": 4,
+            "can_mom": false
+        },
+        {
+            "dna_id": 118,
+            "name": "Samurai DNA",
+            "class": "Earth",
+            "star": 5,
+            "can_mom": true
+        },
+        {
+            "dna_id": 119,
+            "name": "Superhero DNA",
+            "class": "Wind",
+            "star": 5,
+            "can_mom": true
+        },
+        {
+            "dna_id": 120,
+            "name": "Neptune DNA",
+            "class": "Water",
+            "star": 5,
+            "can_mom": true
+        },
+        {
+            "dna_id": 121,
+            "name": "Unicorn DNA",
+            "class": "Earth",
+            "star": 6,
+            "can_mom": true
+        },
+        {
+            "dna_id": 122,
+            "name": "Phoenix DNA",
+            "class": "Wind",
+            "star": 6,
+            "can_mom": true
+        },
+        {
+            "dna_id": 124,
+            "name": "Dragon DNA",
+            "class": "Water",
+            "star": 6,
+            "can_mom": true
+        },
+        {
+            "dna_id": 125,
+            "name": "Black Hole DNA",
+            "class": "Logia",
+            "star": 7,
+            "can_mom": false
+        },
+        {
+            "dna_id": 199,
+            "name": "MAGA King DNA",
+            "class": "Logia",
+            "star": 6,
+            "can_mom": true
+        }
+    ]
+}
