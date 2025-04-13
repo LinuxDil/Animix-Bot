@@ -1774,10 +1774,16 @@ async def main():
         for w in workers:
             w.cancel()
         
-        ani.log("🔁 All accounts processed. Restarting loop.", Fore.CYAN)
-        delay_loop = config.get("delay_loop", 30)
-        ani.log(f"⏳ Sleeping for {Fore.WHITE}{delay_loop}{Fore.CYAN} seconds before restarting.", Fore.CYAN)
-        await asyncio.sleep(delay_loop)
+      ani.log("🔁 All accounts processed. Restarting loop.", Fore.CYAN)
+    # Ambil rentang delay_loop dari config, misalnya [420, 660]
+    delay_range = config.get("delay_loop", [420, 660])
+    # Pilih angka acak antara delay_range[0] dan delay_range[1]
+    delay_loop = random.randint(delay_range[0], delay_range[1])
+    ani.log(f"⏳ Sleeping for {Fore.WHITE}{delay_loop}{Fore.CYAN} seconds before restarting.", Fore.CYAN)
+    # Tidur selama delay_loop detik yang dipilih secara acak
+    await asyncio.sleep(delay_loop)
+# Memulai loop utama
+asyncio.run(main_loop())
 
 if __name__ == "__main__":
     asyncio.run(main())
