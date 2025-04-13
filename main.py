@@ -1782,8 +1782,8 @@ async def main():
     ani.log(f"⏳ Sleeping for {Fore.WHITE}{delay_loop}{Fore.CYAN} seconds before restarting.", Fore.CYAN)
     # Tidur selama delay_loop detik yang dipilih secara acak
     await asyncio.sleep(delay_loop)
-# Memulai loop utama
-asyncio.run(main_loop())
+    # Memulai loop utama
+    asyncio.run(main_loop())
 
 if __name__ == "__main__":
     asyncio.run(main())
