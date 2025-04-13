@@ -1774,7 +1774,7 @@ async def main():
         for w in workers:
             w.cancel()
         
-      ani.log("🔁 All accounts processed. Restarting loop.", Fore.CYAN)
+    ani.log("🔁 All accounts processed. Restarting loop.", Fore.CYAN)
     # Ambil rentang delay_loop dari config, misalnya [420, 660]
     delay_range = config.get("delay_loop", [420, 660])
     # Pilih angka acak antara delay_range[0] dan delay_range[1]
