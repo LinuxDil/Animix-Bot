@@ -1775,7 +1775,7 @@ async def main():
             w.cancel()
         
         ani.log("🔁 All accounts processed. Restarting loop.", Fore.CYAN)
-        delay_loop = config.get("delay_loop", 420, 660)
+        delay_loop = config.get("delay_loop")
         ani.log(f"⏳ Sleeping for {Fore.WHITE}{delay_loop}{Fore.CYAN} seconds before restarting.", Fore.CYAN)
         await asyncio.sleep(delay_loop)
 
