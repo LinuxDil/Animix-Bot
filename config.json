@@ -8,7 +8,7 @@
   "pvp": true,
   "proxy": false,
   "thread": 1,
-  "delay_loop": [420, 660]
+  "delay_loop": 420,
   "delay_account_switch": 10,
   "pet_mix": [
     [122, 125],
