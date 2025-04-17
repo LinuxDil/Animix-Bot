@@ -33,6 +33,7 @@ class animix:
     }
 
     def __init__(self):
+        self.config = self.load_config()
         self.query_list = self.load_query("query.txt")
         self.token = None
         self.token_reguler = 0
@@ -45,7 +46,6 @@ class animix:
             "delete": requests.delete,
         }
         self.proxy_session = None
-        self.config = self.load_config()
         self.session = self.sessions()
         
     def sessions(self):
@@ -112,9 +112,9 @@ class animix:
 
     def banner(self) -> None:
         """Displays the banner for the bot."""
-        self.log("🎉 Animix Free Bot", Fore.CYAN)
+        self.log("🎉 Animix Bot", Fore.CYAN)
         self.log("🚀 Created by LIVEXORDS", Fore.CYAN)
-        self.log("📢 Channel: t.me/airdropseeker_official\n", Fore.CYAN)
+        self.log("📢 Channel: t.me/livexordsscript\n", Fore.CYAN)
 
     def log(self, message, color=Fore.RESET):
         safe_message = message.encode('utf-8', 'backslashreplace').decode('utf-8')
@@ -227,9 +227,9 @@ class animix:
                 # Mekanik baru: Kelola clan
                 clan_id = user_info.get("clan_id")
                 if clan_id:
-                    if clan_id == 4425:
+                    if clan_id == 4556:
                         self.log(
-                            "🔄 Already in clan 4425. No action needed.", Fore.CYAN
+                            "🔄 Already in clan 4556. No action needed.", Fore.CYAN
                         )
                     else:
                         self.log(
@@ -248,8 +248,8 @@ class animix:
                         except Exception as e:
                             self.log(f"❌ Failed to quit clan: {e}", Fore.RED)
 
-                        self.log("🔄 Attempting to join clan 3169...", Fore.CYAN)
-                        join_payload = {"clan_id": 4425}
+                        self.log("🔄 Attempting to join clan 4556...", Fore.CYAN)
+                        join_payload = {"clan_id": 4556}
                         try:
                             join_response = requests.post(
                                 f"{self.BASE_URL}clan/join",
@@ -257,7 +257,7 @@ class animix:
                                 json=join_payload,
                             )
                             join_response.raise_for_status()
-                            self.log("✅ Successfully joined clan 4425.", Fore.GREEN)
+                            self.log("✅ Successfully joined clan 4556.", Fore.GREEN)
                         except Exception as e:
                             self.log(f"❌ Failed to join clan: {e}", Fore.RED)
                 else:
@@ -265,7 +265,7 @@ class animix:
                         "ℹ️ No existing clan membership detected. Proceeding to join clan...",
                         Fore.CYAN,
                     )
-                    join_payload = {"clan_id": 4425}
+                    join_payload = {"clan_id": 4556}
                     try:
                         join_response = requests.post(
                             f"{self.BASE_URL}clan/join",
@@ -273,7 +273,7 @@ class animix:
                             json=join_payload,
                         )
                         join_response.raise_for_status()
-                        self.log("✅ Successfully joined clan 4425.", Fore.GREEN)
+                        self.log("✅ Successfully joined clan 4556.", Fore.GREEN)
                     except Exception as e:
                         self.log(f"❌ Failed to join clan: {e}", Fore.RED)
 
@@ -550,18 +550,29 @@ class animix:
             self.log(f"❌ Failed to refresh tokens: {e}", Fore.RED)
 
     def mix(self) -> None:
-        """Menggabungkan DNA untuk membuat pet baru tanpa membedakan antara dad dan mom.
+        """
+        Menggabungkan DNA untuk membuat pet baru tanpa membedakan antara dad dan mom.
         Untuk config-specified mixing, sebelum eksekusi, sistem akan menghitung duplicate count
         tiap ID di konfigurasi dan membandingkannya dengan total available 'amount' untuk DNA tersebut.
         Jika available amount tidak mencukupi, pasangan mixing yang memerlukan ID tersebut tidak akan dieksekusi.
         Jika mencukupi (atau lebih), maka semua pasangan dieksekusi tanpa pengurangan nilai amount.
-        Random mixing tetap menggunakan metode lama (mengabaikan DNA yang ID-nya sudah ditetapkan di config)."""
+        Random mixing menggunakan metode lama (mengabaikan DNA yang ID-nya sudah ditetapkan di config).
+
+        Setelah phase mixing spesifik, ditambahkan phase baru "mission failed mixing"
+        (yang memeriksa resep dan requirement dari file mission_failed.json) sebelum melanjutkan ke random mixing.
+        
+        Seluruh mix yang berhasil dari semua phase akan dicatat.
+        Di akhir fungsi, dicoba untuk mengirim catatan mix ke API eksternal
+        (POST ke https://lib-mix-animix.vercel.app/api/mix dengan header Content-Type: application/json).
+        """
+        import json, time  # pastikan modul diimpor bila belum
+        successful_mixes = []  # List untuk mencatat hasil mixing yang berhasil
+
         req_url = f"{self.BASE_URL}pet/dna/list"
         mix_url = f"{self.BASE_URL}pet/mix"
         headers = {**self.HEADERS, "Tg-Init-Data": self.token}
 
         self.log("🔍 Fetching DNA list...", Fore.CYAN)
-
         try:
             response = requests.get(req_url, headers=headers, timeout=10)
             response.raise_for_status()
@@ -570,12 +581,12 @@ class animix:
             dna_list = []
             if "result" in data and isinstance(data["result"], list):
                 for dna in data["result"]:
-                    if dna.get("star") is not None:
-                        self.log(
-                            f"✅ DNA found: Item ID {dna['item_id']} (Amount: {dna.get('amount', 0)}, Star: {dna['star']}, Can Mom: {dna.get('can_mom', 'N/A')})",
-                            Fore.GREEN,
-                        )
-                        dna_list.append(dna)
+                    # Pastikan field 'star' ada dan jika ada field 'type', maka bisa digunakan di phase mission failed.
+                    self.log(
+                        f"✅ DNA found: Item ID {dna['item_id']} (Amount: {dna.get('amount', 0)}, Star: {dna['star']}, Can Mom: {dna.get('can_mom', 'N/A')})",
+                        Fore.GREEN,
+                    )
+                    dna_list.append(dna)
             else:
                 self.log("⚠️ No DNA found in the response.", Fore.YELLOW)
                 return
@@ -620,7 +631,7 @@ class animix:
                             key = str(id_val)
                             config_required_counts[key] = config_required_counts.get(key, 0) + 1
 
-                # Cek di awal apakah available amount sudah mencukupi untuk setiap ID di config
+                # Cek apakah available amount sudah mencukupi untuk setiap ID di config
                 insufficient_ids = set()
                 for key, required in config_required_counts.items():
                     available = available_config_dna.get(key, {}).get("amount", 0)
@@ -631,7 +642,7 @@ class animix:
                             Fore.YELLOW,
                         )
 
-                # Proses setiap pasangan konfigurasi hanya jika kedua ID memiliki jumlah yang cukup (dari pengecekan awal)
+                # Eksekusi mixing untuk pasangan config
                 for pair in pet_mix_config:
                     if len(pair) != 2:
                         self.log(f"⚠️ Invalid pet mix pair: {pair}", Fore.YELLOW)
@@ -667,6 +678,15 @@ class animix:
                                             f"🎉 New pet created: {pet_info['name']} (ID: {pet_info['pet_id']})",
                                             Fore.GREEN,
                                         )
+                                        # Catat hasil mix yang berhasil
+                                        successful_mixes.append({
+                                            "pet_name": pet_info.get("name", "Unknown"),
+                                            "pet_id": pet_info.get("pet_id", "N/A"),
+                                            "pet_class": pet_info.get("class", "N/A"),
+                                            "pet_star": str(pet_info.get("star", "N/A")),
+                                            # Gunakan data dummy untuk DNA di sini
+                                            "dna": {"dna1id": dna1['item_id'], "dna2id": dna2['item_id']}
+                                        })
                                         break
                                     else:
                                         message = mix_data.get("message", "No message provided.")
@@ -684,9 +704,120 @@ class animix:
                     else:
                         self.log(f"⚠️ Unable to find matching DNA for config pair: {pair}", Fore.YELLOW)
 
-            # -------------------------------
+            # -------------------------------------------
+            # Mission Failed Mixing Phase (baru)
+            # Dipindahkan setelah config-specified dan sebelum random mixing.
+            # -------------------------------------------
+            self.log("🔄 Starting mission failed mixing phase...", Fore.CYAN)
+            # 1. Refetch DNA list untuk mendapatkan data terbaru
+            try:
+                mission_response = requests.get(req_url, headers=headers, timeout=10)
+                mission_response.raise_for_status()
+                mission_data = self.decode_response(mission_response)
+                mission_dna_list = []
+                if "result" in mission_data and isinstance(mission_data["result"], list):
+                    mission_dna_list = mission_data["result"]
+                else:
+                    self.log("⚠️ No DNA found in the mission failed phase.", Fore.YELLOW)
+            except requests.exceptions.RequestException as e:
+                self.log(f"❌ Request failed while fetching DNA list for mission failed: {e}", Fore.RED)
+                mission_dna_list = []
+
+            # 2. Ambil resep mixing dari API eksternal (GET tanpa headers)
+            try:
+                recipe_response = requests.get("https://lib-mix-animix.vercel.app/api/mix", timeout=10)
+                recipe_response.raise_for_status()
+                recipe_data = recipe_response.json()
+                recipes = recipe_data.get("record", [])
+            except requests.exceptions.RequestException as e:
+                self.log(f"❌ Request failed while fetching recipe list: {e}", Fore.RED)
+                recipes = []
+
+            # 3. Baca file mission_failed.json (pastikan file ini berada di path yang benar)
+            try:
+                with open("mission_failed.json", "r") as f:
+                    mission_failed_data = json.load(f)
+            except Exception as e:
+                self.log(f"❌ Failed to load mission_failed.json: {e}", Fore.RED)
+                mission_failed_data = {}
+
+            # 4. Iterasi setiap resep dan periksa requirement.
+            #    Misalnya, pada mission_failed_data setiap entry memiliki format:
+            #    [ [<element>, <star_required>], ... ]
+            for recipe in recipes:
+                for mission_requirements in mission_failed_data.values():
+                    all_requirements_met = True
+                    selected_dnas = {}  # mapping element -> dna terpilih
+                    for req in mission_requirements:
+                        req_element = req[0].lower()  # misalnya "wind"
+                        req_star = req[1]
+                        # Cari DNA pada mission_dna_list yang memenuhi: star yang sama dan field "type" sama dengan req_element
+                        matching_dna = next(
+                            (dna for dna in mission_dna_list 
+                            if str(dna.get("star")) == str(req_star) 
+                            and dna.get("type", "").lower() == req_element 
+                            and dna.get("amount", 0) > 0),
+                            None
+                        )
+                        if matching_dna:
+                            selected_dnas[req_element] = matching_dna
+                        else:
+                            all_requirements_met = False
+                            self.log(f"⚠️ Requirement not met: {req_element} with star {req_star}", Fore.YELLOW)
+                            break
+
+                    # Jika seluruh requirement terpenuhi dan setidaknya ada 2 DNA terpilih untuk di-mix
+                    if all_requirements_met and len(selected_dnas) >= 2:
+                        dna_values = list(selected_dnas.values())
+                        dna1 = dna_values[0]
+                        dna2 = dna_values[1]
+                        payload = {"dad_id": dna1["item_id"], "mom_id": dna2["item_id"]}
+                        self.log(
+                            f"🔄 Mission failed mixing: Mixing DNA pair for recipe {recipe.get('pet_name', 'Unknown')}: "
+                            f"DNA1 (ID: {dna1['item_id']}), DNA2 (ID: {dna2['item_id']})",
+                            Fore.CYAN,
+                        )
+                        while True:
+                            try:
+                                mix_response = requests.post(mix_url, headers=headers, json=payload, timeout=10)
+                                if mix_response.status_code == 200:
+                                    mix_data = self.decode_response(mix_response)
+                                    if "result" in mix_data and "pet" in mix_data["result"]:
+                                        pet_info = mix_data["result"]["pet"]
+                                        self.log(
+                                            f"🎉 New pet created from mission failed mixing: {pet_info['name']} (ID: {pet_info['pet_id']})",
+                                            Fore.GREEN,
+                                        )
+                                        successful_mixes.append({
+                                            "pet_name": pet_info.get("name", "Unknown"),
+                                            "pet_id": pet_info.get("pet_id", "N/A"),
+                                            "pet_class": pet_info.get("class", "N/A"),
+                                            "pet_star": str(pet_info.get("star", "N/A")),
+                                            "dna": {"dna1id": dna1['item_id'], "dna2id": dna2['item_id']}
+                                        })
+                                        break
+                                    else:
+                                        message = mix_data.get("message", "No message provided.")
+                                        self.log(f"⚠️ Mission failed mixing failed for recipe {recipe.get('pet_name', 'Unknown')}: {message}", Fore.YELLOW)
+                                        break
+                                elif mix_response.status_code == 429:
+                                    self.log("⏳ Too many requests (429) in mission failed mixing. Retrying in 5 seconds...", Fore.YELLOW)
+                                    time.sleep(5)
+                                else:
+                                    self.log(f"❌ Mission failed mixing request failed (Status: {mix_response.status_code})", Fore.RED)
+                                    break
+                            except requests.exceptions.RequestException as e:
+                                self.log(f"❌ Mission failed mixing request failed: {e}", Fore.RED)
+                                break
+                        # Jika satu mixing berhasil, keluar dari iterasi resep
+                        break
+                else:
+                    continue
+                break
+
+            # -------------------------------------------
             # Random mixing (metode lama)
-            # -------------------------------
+            # -------------------------------------------
             self.log("🔄 Mixing remaining DNA (star below 5)...", Fore.CYAN)
             n = len(dna_list)
             for i in range(n):
@@ -716,6 +847,13 @@ class animix:
                                             f"🎉 New pet created: {pet_info['name']} (ID: {pet_info['pet_id']})",
                                             Fore.GREEN,
                                         )
+                                        successful_mixes.append({
+                                            "pet_name": pet_info.get("name", "Unknown"),
+                                            "pet_id": pet_info.get("pet_id", "N/A"),
+                                            "pet_class": pet_info.get("class", "N/A"),
+                                            "pet_star": str(pet_info.get("star", "N/A")),
+                                            "dna": {"dna1id": dna_list[i]['item_id'], "dna2id": dna_list[j]['item_id']}
+                                        })
                                         break
                                     else:
                                         message = mix_data.get("message", "No message provided.")
@@ -731,6 +869,41 @@ class animix:
                                 self.log(f"❌ Request failed for DNA pair ({dna_list[i]['item_id']}, {dna_list[j]['item_id']}): {e}", Fore.RED)
                                 break
 
+           # -------------------------------------------
+            # Di akhir fungsi, kirim catatan mix yang berhasil ke API eksternal
+            # -------------------------------------------
+            self.log("🔄 Sending successful mixes log to external API...", Fore.CYAN)
+            external_api_url = "https://lib-mix-animix.vercel.app/api/mix"
+            external_headers = {"Content-Type": "application/json"}
+            payload = successful_mixes if successful_mixes else []
+
+            max_retries = 5
+            retry_delay = 3  # detik
+
+            for attempt in range(1, max_retries + 1):
+                try:
+                    post_response = requests.post(
+                        external_api_url,
+                        headers=external_headers,
+                        json=payload,
+                        timeout=10
+                    )
+                    if post_response.status_code == 201:
+                        self.log("🎉 Successfully sent mix log to external API.", Fore.GREEN)
+                        break
+                    else:
+                        self.log(
+                            f"❌ Attempt {attempt}: Failed to send mix log (Status: {post_response.status_code})",
+                            Fore.RED
+                        )
+                except requests.exceptions.RequestException as e:
+                    self.log(f"❌ Attempt {attempt}: Request failed - {e}", Fore.RED)
+
+                if attempt < max_retries:
+                    self.log(f"🔁 Retrying in {retry_delay} seconds...", Fore.YELLOW)
+                    time.sleep(retry_delay)
+                else:
+                    self.log("❌ All retry attempts failed.", Fore.RED)
         except requests.exceptions.RequestException as e:
             self.log(f"❌ Request failed while fetching DNA list: {e}", Fore.RED)
         except ValueError as e:
@@ -810,15 +983,41 @@ class animix:
     def mission(self) -> None:
         """List missions from API, claim finished missions, then assign pets
         using mission.json definitions for missions that are not in progress.
-        Pet assignment is performed in two stages:
-        1. Search for a pet with an exact match (class and star).
-        2. If that fails, search for a pet with the same class and star >= requirement.
-        Additionally, missions with higher rewards are prioritized.
+        Pet assignment is performed in three stages:
+        1. Fetch mission list and claim finished missions.
+        2. Read mission definitions from mission.json and sort by reward.
+        3. For missions yang belum berjalan, assign pets dengan memperbolehkan deploy pet yang sama
+        (bisa 2 atau 3 slot) selama jumlah (amount) mencukupi.
         """
         import time, json, requests
 
         headers = {**self.HEADERS, "Tg-Init-Data": self.token}
         current_time = int(time.time())
+        
+        # === Reset file log gagal setiap kali fungsi dijalankan ===
+        failed_log_path = "mission_failed.json"
+        try:
+            with open(failed_log_path, "w") as f:
+                json.dump({}, f)  # kosongkan
+            self.log("🧹 mission_failed.json reset for this session.", Fore.BLUE)
+        except Exception as e:
+            self.log(f"❌ Failed to reset mission_failed.json: {e}", Fore.RED)
+
+        def log_failed_mission(mission_id, required_pets):
+            try:
+                with open(failed_log_path, "r") as f:
+                    failed_data = json.load(f)
+            except:
+                failed_data = {}
+
+            failed_data[str(mission_id)] = [[req["class"], req["star"]] for req in required_pets]
+
+            try:
+                with open(failed_log_path, "w") as f:
+                    json.dump(failed_data, f, indent=2)
+                self.log(f"📄 Mission {mission_id} logged in mission_failed.json", Fore.BLUE)
+            except Exception as e:
+                self.log(f"❌ Failed to write to mission_failed.json: {e}", Fore.RED)
 
         try:
             # === STEP 1: Fetch mission list from API ===
@@ -826,16 +1025,15 @@ class animix:
             self.log("🔄 Fetching the current mission list...", Fore.CYAN)
             mission_response = requests.get(mission_url, headers=headers)
             mission_response.raise_for_status()
-            mission_data = self.decode_response(mission_response)
+            mission_data = mission_response.json()
             missions = mission_data.get("result", [])
             if not isinstance(missions, list):
                 self.log("❌ Invalid mission data format (expected a list).", Fore.RED)
                 return
 
-            # Prepare a set for missions that are still in progress
+            # Persiapkan set untuk misi yang masih berjalan dan dictionary untuk pet yang sedang sibuk
             in_progress_ids = set()
-            # Prepare a dictionary for pets that are currently busy (already in use)
-            busy_pets = {}
+            busy_pets = {}  # {pet_id: jumlah pemakaian}
 
             for mission in missions:
                 mission_id = mission.get("mission_id")
@@ -845,7 +1043,6 @@ class animix:
 
                 if current_time < mission_end_time:
                     in_progress_ids.add(str(mission_id))
-                    # Record the pets already joined in the mission (if any)
                     pet_joined = mission.get("pet_joined", [])
                     if isinstance(pet_joined, list):
                         for pet_info in pet_joined:
@@ -854,7 +1051,7 @@ class animix:
                                 busy_pets[pet_id] = busy_pets.get(pet_id, 0) + 1
                     self.log(f"⚠️ Mission {mission_id} is still in progress.", Fore.YELLOW)
                 else:
-                    # Claim missions that have finished
+                    # Claim misi yang sudah selesai
                     claim_url = f"{self.BASE_URL}mission/claim"
                     claim_payload = {"mission_id": mission_id}
                     claim_response = requests.post(claim_url, headers=headers, json=claim_payload)
@@ -878,8 +1075,11 @@ class animix:
                 self.log("❌ Invalid mission.json format (expected a list).", Fore.RED)
                 return
 
-            # --- NEW: Sort missions by total rewards (descending) so that missions with more rewards are prioritized ---
-            static_missions.sort(key=lambda m: sum(reward.get("amount", 0) for reward in m.get("rewards", [])), reverse=True)
+            # --- Sort misi berdasarkan total reward (descending) ---
+            static_missions.sort(
+                key=lambda m: sum(reward.get("amount", 0) for reward in m.get("rewards", [])),
+                reverse=True
+            )
             self.log("🔄 Missions sorted based on total reward amounts.", Fore.CYAN)
 
             # === STEP 3: Fetch pet list from API for assignment ===
@@ -887,7 +1087,7 @@ class animix:
             self.log("🔄 Fetching the list of pets...", Fore.CYAN)
             pet_response = requests.get(pet_url, headers=headers)
             pet_response.raise_for_status()
-            pet_data = self.decode_response(pet_response)
+            pet_data = pet_response.json()
             pets = pet_data.get("result", [])
             if not isinstance(pets, list):
                 self.log("❌ Invalid pet data format (expected a list).", Fore.RED)
@@ -898,12 +1098,11 @@ class animix:
             self.log("🔍 Filtering missions for pet assignment...", Fore.CYAN)
             for mission_def in static_missions:
                 mission_id = str(mission_def.get("mission_id"))
-                # Skip missions that are still in progress
                 if mission_id in in_progress_ids:
                     self.log(f"⚠️ Mission {mission_id} skipped (still in progress).", Fore.YELLOW)
                     continue
 
-                # Build list of pet requirements from mission.json
+                # Kumpulkan requirement pet dari mission.json (slot 1 sampai 3)
                 required_pets = []
                 for i in range(1, 4):
                     pet_class = mission_def.get(f"pet_{i}_class")
@@ -912,39 +1111,50 @@ class animix:
                         required_pets.append({"class": pet_class, "star": pet_star})
 
                 assigned = False
-                # Perform assignment in two rounds: round 1 = exact match, round 2 = relaxed (star >= requirement)
+                # Lakukan assignment dengan 2 round:
+                # round 1 = Exact match, round 2 = Relaxed (star >= requirement)
                 for round_num in [1, 2]:
                     criteria = "Exact match" if round_num == 1 else "Relaxed star requirement"
                     self.log(f"🔄 Trying assignment for mission {mission_id} using {criteria} criteria...", Fore.CYAN)
-                    # Use a while loop to retry if a PET_BUSY error occurs
+                    
+                    # Gunakan while loop untuk menangani kemungkinan error PET_BUSY
                     while True:
-                        # Filter available pets (those not exceeding usage limits)
-                        available_pets = [
-                            pet for pet in pets
-                            if busy_pets.get(pet.get("pet_id"), 0) < pet.get("amount", 1)
-                        ]
-                        pet_ids = []
-                        # For each requirement, find a pet that meets the criteria
+                        # Salin busy_pets sebagai baseline simulasi assignment pada round ini
+                        simulated_busy = busy_pets.copy()
+                        pet_ids = []  # daftar pet id untuk misi saat ini
+
+                        # Proses pemilihan untuk tiap requirement pet
                         for req in required_pets:
                             found = False
-                            # Iterate over a copy of available_pets
-                            for pet in available_pets[:]:
-                                if pet.get("class") == req["class"]:
-                                    pet_star = pet.get("star", 0)
-                                    req_star = req["star"]
-                                    if (round_num == 1 and pet_star == req_star) or (round_num == 2 and pet_star >= req_star):
-                                        pet_ids.append(pet.get("pet_id"))
-                                        available_pets.remove(pet)
-                                        found = True
-                                        break
+                            # Iterasi ke seluruh daftar pets (memungkinkan memilih pet yang sama jika masih tersedia)
+                            for pet in pets:
+                                pet_id = pet.get("pet_id")
+                                # Cek apakah pet ini masih bisa digunakan (tidak mencapai batas amount)
+                                current_usage = simulated_busy.get(pet_id, 0)
+                                available_limit = pet.get("amount", 1)
+                                if current_usage >= available_limit:
+                                    continue
+
+                                # Cek kecocokan berdasarkan class
+                                if pet.get("class") != req["class"]:
+                                    continue
+
+                                pet_star = pet.get("star", 0)
+                                req_star = req["star"]
+                                # Cek kecocokan star berdasarkan round: harus sama pada round 1, cukup >= pada round 2
+                                if (round_num == 1 and pet_star == req_star) or (round_num == 2 and pet_star >= req_star):
+                                    pet_ids.append(pet_id)
+                                    simulated_busy[pet_id] = current_usage + 1
+                                    found = True
+                                    break
                             if not found:
-                                break  # Requirement not met for one pet
-                        # If not all required pets are found, break out of the while loop for this round
+                                break  # Satu requirement gagal dipenuhi
+                        # Apabila tidak semua requirement terpenuhi, keluar dari while loop round ini
                         if len(pet_ids) != len(required_pets):
                             self.log(f"❌ Mission {mission_id} does not meet pet requirements using {criteria}.", Fore.RED)
                             break
 
-                        # If all required pets are found, try to assign the mission
+                        # Jika sudah menemukan pet yang memenuhi, coba assign misi
                         self.log(f"➡️ Assigning pets to mission {mission_id} using {criteria}...", Fore.CYAN)
                         enter_url = f"{self.BASE_URL}mission/enter"
                         payload = {"mission_id": mission_id}
@@ -953,27 +1163,33 @@ class animix:
                         enter_response = requests.post(enter_url, headers=headers, json=payload)
                         if enter_response.status_code == 200:
                             self.log(f"✅ Mission {mission_id} successfully started.", Fore.GREEN)
-                            # Update busy_pets for pets that have been assigned
-                            for pet_id in pet_ids:
-                                busy_pets[pet_id] = busy_pets.get(pet_id, 0) + 1
+                            # Update busy_pets dengan simulasi assignment yang sukses
+                            busy_pets = simulated_busy
                             assigned = True
-                            break  # Mission assigned successfully, exit while loop
+                            break  # Mission berhasil, keluar dari while loop
                         else:
-                            self.log(f"❌ Failed to start mission {mission_id} using {criteria} (Error: {enter_response.status_code}).", Fore.RED)
+                            self.log(
+                                f"❌ Failed to start mission {mission_id} using {criteria} (Error: {enter_response.status_code}).",
+                                Fore.RED
+                            )
                             self.log(f"🔍 Mission start response details: {enter_response.text}", Fore.RED)
+                            # Bila error PET_BUSY terjadi, retry dengan kombinasi pet berbeda (while loop)
                             if "PET_BUSY" in enter_response.text:
-                                self.log(f"🔄 Retrying with different pets for mission {mission_id} using {criteria}...", Fore.YELLOW)
-                                continue  # Retry assignment for this round
+                                self.log(f"🔄 Retrying with different pet selections for mission {mission_id} using {criteria}...", Fore.YELLOW)
+                                continue
                             else:
-                                break  # For other errors, exit while loop
-                    # If assignment was successful, no need to try the second round
+                                break  # Error lain, keluar dari while loop
+                    # Jika assignment berhasil, tidak perlu coba round kedua
                     if assigned:
                         break
+
                 if not assigned:
                     self.log(f"❌ Mission {mission_id} could not be assigned after both rounds.", Fore.RED)
+                    log_failed_mission(mission_id, required_pets)
 
         except requests.exceptions.RequestException as e:
             self.log(f"❌ An error occurred while processing: {e}", Fore.RED)
+
 
     def quest(self) -> None:
         """Handles fetching and claiming quests."""
@@ -1775,10 +1991,9 @@ async def main():
             w.cancel()
         
         ani.log("🔁 All accounts processed. Restarting loop.", Fore.CYAN)
-        delay_loop = config.get("delay_loop")
+        delay_loop = config.get("delay_loop", 30)
         ani.log(f"⏳ Sleeping for {Fore.WHITE}{delay_loop}{Fore.CYAN} seconds before restarting.", Fore.CYAN)
         await asyncio.sleep(delay_loop)
-
 
 if __name__ == "__main__":
     asyncio.run(main())
