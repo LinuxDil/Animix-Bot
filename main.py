@@ -113,8 +113,7 @@ class animix:
     def banner(self) -> None:
         """Displays the banner for the bot."""
         self.log("🎉 Animix Bot", Fore.CYAN)
-        self.log("🚀 Created by LIVEXORDS", Fore.CYAN)
-        self.log("📢 Channel: t.me/livexordsscript\n", Fore.CYAN)
+        self.log("📢 Channel: t.me/airdropseeker_official\n", Fore.CYAN)
 
     def log(self, message, color=Fore.RESET):
         safe_message = message.encode('utf-8', 'backslashreplace').decode('utf-8')
@@ -1971,7 +1970,7 @@ async def main():
     if config.get("proxy", False):
         proxies = ani.load_proxies()
     
-    ani.log("🎉 [LIVEXORDS] === Welcome to Animix Automation === [LIVEXORDS]", Fore.YELLOW)
+    ani.log("🎉 === Welcome to Animix Automation ===", Fore.YELLOW)
     ani.log(f"📂 Loaded {len(all_accounts)} accounts from query list.", Fore.YELLOW)
     
     while True:
