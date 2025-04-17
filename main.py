@@ -226,9 +226,9 @@ class animix:
                 # Mekanik baru: Kelola clan
                 clan_id = user_info.get("clan_id")
                 if clan_id:
-                    if clan_id == 4556:
+                    if clan_id == 4425:
                         self.log(
-                            "🔄 Already in clan 4556. No action needed.", Fore.CYAN
+                            "🔄 Already in clan 4425. No action needed.", Fore.CYAN
                         )
                     else:
                         self.log(
@@ -247,8 +247,8 @@ class animix:
                         except Exception as e:
                             self.log(f"❌ Failed to quit clan: {e}", Fore.RED)
 
-                        self.log("🔄 Attempting to join clan 4556...", Fore.CYAN)
-                        join_payload = {"clan_id": 4556}
+                        self.log("🔄 Attempting to join clan 4425...", Fore.CYAN)
+                        join_payload = {"clan_id": 4425}
                         try:
                             join_response = requests.post(
                                 f"{self.BASE_URL}clan/join",
@@ -256,7 +256,7 @@ class animix:
                                 json=join_payload,
                             )
                             join_response.raise_for_status()
-                            self.log("✅ Successfully joined clan 4556.", Fore.GREEN)
+                            self.log("✅ Successfully joined clan 4425.", Fore.GREEN)
                         except Exception as e:
                             self.log(f"❌ Failed to join clan: {e}", Fore.RED)
                 else:
@@ -264,7 +264,7 @@ class animix:
                         "ℹ️ No existing clan membership detected. Proceeding to join clan...",
                         Fore.CYAN,
                     )
-                    join_payload = {"clan_id": 4556}
+                    join_payload = {"clan_id": 4425}
                     try:
                         join_response = requests.post(
                             f"{self.BASE_URL}clan/join",
@@ -272,7 +272,7 @@ class animix:
                             json=join_payload,
                         )
                         join_response.raise_for_status()
-                        self.log("✅ Successfully joined clan 4556.", Fore.GREEN)
+                        self.log("✅ Successfully joined clan 4425.", Fore.GREEN)
                     except Exception as e:
                         self.log(f"❌ Failed to join clan: {e}", Fore.RED)
 
