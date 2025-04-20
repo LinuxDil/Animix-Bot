@@ -651,7 +651,7 @@ class animix:
                     key1 = str(id1_config)
                     key2 = str(id2_config)
 
-                    # Jika salah satu ID tidak mencukupi, lewati pasangan ini
+                    # Jika salah satu ID tidak mencukupi, lewati pasangan ini.
                     if key1 in insufficient_ids or key2 in insufficient_ids:
                         self.log(f"⚠️ Skipping config pair {pair} due to insufficient quantity.", Fore.YELLOW)
                         continue
