@@ -67,7 +67,7 @@ class animix:
             - Jika Content-Type mengandung 'application/json', maka mengembalikan objek Python (dict atau list) hasil parsing JSON.
             - Jika bukan JSON, maka mengembalikan string hasil decode.
         """
-        # Ambil header
+        # Ambil header bro
         content_encoding = response.headers.get('Content-Encoding', '').lower()
         content_type = response.headers.get('Content-Type', '').lower()
 
