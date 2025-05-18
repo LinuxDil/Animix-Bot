@@ -2416,7 +2416,7 @@ async def main():
         proxies = ani.load_proxies()
 
     ani.log(
-        "🎉 [LIVEXORDS] === Welcome to Animix Automation === [LIVEXORDS]", Fore.YELLOW
+        "🎉  === Welcome to Animix Automation === ", Fore.YELLOW
     )
     ani.log(f"📂 Loaded {len(all_accounts)} accounts from query list.", Fore.YELLOW)
 
