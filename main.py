@@ -920,10 +920,10 @@ class animix:
                                         break
                                 elif mix_response.status_code == 429:
                                     self.log(
-                                        "⏳ Too many requests (429). Retrying in 5 seconds...",
+                                        "⏳ Too many requests (429). Retrying in 10 seconds...",
                                         Fore.YELLOW,
                                     )
-                                    time.sleep(5)
+                                    time.sleep(10)
                                 else:
                                     self.log(
                                         f"❌ Request failed for config pair {pair} (Status: {mix_response.status_code})",
@@ -1074,10 +1074,10 @@ class animix:
                                         break
                                 elif mix_response.status_code == 429:
                                     self.log(
-                                        "⏳ Too many requests (429) in mission failed mixing. Retrying in 5 seconds...",
+                                        "⏳ Too many requests (429) in mission failed mixing. Retrying in 10 seconds...",
                                         Fore.YELLOW,
                                     )
-                                    time.sleep(5)
+                                    time.sleep(10)
                                 else:
                                     self.log(
                                         f"❌ Mission failed mixing request failed (Status: {mix_response.status_code})",
@@ -1166,10 +1166,10 @@ class animix:
                                         break
                                 elif mix_response.status_code == 429:
                                     self.log(
-                                        "⏳ Too many requests (429). Retrying in 5 seconds...",
+                                        "⏳ Too many requests (429). Retrying in 10 seconds...",
                                         Fore.YELLOW,
                                     )
-                                    time.sleep(5)
+                                    time.sleep(10)
                                 else:
                                     self.log(
                                         f"❌ Request failed for DNA pair ({dna_list[i]['item_id']}, {dna_list[j]['item_id']}) (Status: {mix_response.status_code})",
