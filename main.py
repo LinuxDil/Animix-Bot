@@ -709,7 +709,7 @@ class animix:
             self.log(f"❌ Error during super bonus claim check: {e}", Fore.RED)
 
         # REFRESH TOKENS
-        time.sleep(1)
+        time.sleep(5)
         self.log("🔄 Refreshing gacha tokens...", Fore.CYAN)
         req_url = f"{self.BASE_URL}user/info"
         try:
@@ -1192,7 +1192,7 @@ class animix:
             payload = successful_mixes if successful_mixes else []
 
             max_retries = 2
-            retry_delay = 3  # seconds
+            retry_delay = 10  # seconds
 
             for attempt in range(1, max_retries + 1):
                 try:
