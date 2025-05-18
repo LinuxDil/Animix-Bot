@@ -13,16 +13,17 @@ import chardet
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
+
 class animix:
 
     BASE_URL = "https://pro-api.animix.tech/public/"
     HEADERS = {
         "accept": "*/*",
-        "accept-encoding": "gzip, deflate, br, zstd",
+        "accept-encoding": "br",
         "accept-language": "en-GB,en;q=0.9,en-US;q=0.8",
-        "origin": "https://tele-game.animix.tech",
+        "origin": "https://tele-game-v213.animix.tech",
         "priority": "u=1, i",
-        "referer": "https://tele-game.animix.tech/",
+        "referer": "https://tele-game-v213.animix.tech/",
         "sec-ch-ua": '"Microsoft Edge";v="131", "Chromium";v="131", "Not_A Brand";v="24", "Microsoft Edge WebView2";v="131"',
         "sec-ch-ua-mobile": "?0",
         "sec-ch-ua-platform": '"Windows"',
@@ -47,65 +48,65 @@ class animix:
         }
         self.proxy_session = None
         self.session = self.sessions()
-        
+
     def sessions(self):
         session = requests.Session()
-        retries = Retry(total=3,
-                        backoff_factor=1,
-                        status_forcelist=[500, 502, 503, 504, 520])
-        session.mount('https://', HTTPAdapter(max_retries=retries))
+        retries = Retry(
+            total=3, backoff_factor=1, status_forcelist=[500, 502, 503, 504, 520]
+        )
+        session.mount("https://", HTTPAdapter(max_retries=retries))
         return session
-    
+
     def decode_response(self, response):
         """
-        Mendekode response dari server secara umum.
+        Decodes the server response in a general way.
 
-        Parameter:
-            response: objek requests.Response
+        Parameters:
+            response: requests.Response object
 
-        Mengembalikan:
-            - Jika Content-Type mengandung 'application/json', maka mengembalikan objek Python (dict atau list) hasil parsing JSON.
-            - Jika bukan JSON, maka mengembalikan string hasil decode.
+        Returns:
+            - If Content-Type contains 'application/json', returns a Python object (dict or list) from JSON parsing.
+            - If not JSON, returns the decoded string.
         """
-        # Ambil header bro
-        content_encoding = response.headers.get('Content-Encoding', '').lower()
-        content_type = response.headers.get('Content-Type', '').lower()
+        # Get headers
+        content_encoding = response.headers.get("Content-Encoding", "").lower()
+        content_type = response.headers.get("Content-Type", "").lower()
 
-        # Tentukan charset dari Content-Type, default ke utf-8
-        charset = 'utf-8'
-        if 'charset=' in content_type:
-            charset = content_type.split('charset=')[-1].split(';')[0].strip()
+        # Determine charset from Content-Type, default to utf-8
+        charset = "utf-8"
+        if "charset=" in content_type:
+            charset = content_type.split("charset=")[-1].split(";")[0].strip()
 
-        # Ambil data mentah
+        # Get raw data
         data = response.content
 
-        # Dekompresi jika perlu
+        # Decompress if needed
         try:
-            if content_encoding == 'gzip':
+            if content_encoding == "gzip":
                 data = gzip.decompress(data)
-            elif content_encoding in ['br', 'brotli']:
+            elif content_encoding in ["br", "brotli"]:
                 data = brotli.decompress(data)
-            elif content_encoding in ['deflate', 'zlib']:
+            elif content_encoding in ["deflate", "zlib"]:
                 data = zlib.decompress(data)
         except Exception:
-            # Jika dekompresi gagal, lanjutkan dengan data asli
+            # If decompression fails, continue with original data
             pass
 
-        # Coba decode menggunakan charset yang didapat
+        # Try to decode using the determined charset
         try:
             text = data.decode(charset)
         except Exception:
-            # Fallback: deteksi encoding dengan chardet
+            # Fallback: detect encoding with chardet
             detection = chardet.detect(data)
             detected_encoding = detection.get("encoding", "utf-8")
-            text = data.decode(detected_encoding, errors='replace')
+            text = data.decode(detected_encoding, errors="replace")
 
-        # Jika konten berupa JSON, kembalikan hasil parsing JSON
-        if 'application/json' in content_type:
+        # If content is JSON, return parsed JSON
+        if "application/json" in content_type:
             try:
                 return json.loads(text)
             except Exception:
-                # Jika parsing JSON gagal, kembalikan string hasil decode
+                # If JSON parsing fails, return decoded string
                 return text
         else:
             return text
@@ -113,10 +114,11 @@ class animix:
     def banner(self) -> None:
         """Displays the banner for the bot."""
         self.log("🎉 Animix Bot", Fore.CYAN)
-        self.log("📢 Channel: t.me/airdropseeker_official\n", Fore.CYAN)
+        self.log("🚀 Created by 0xM3th", Fore.CYAN)
+        self.log("📢 Channel: discord.gg/WfgGg8n9\n", Fore.CYAN)
 
     def log(self, message, color=Fore.RESET):
-        safe_message = message.encode('utf-8', 'backslashreplace').decode('utf-8')
+        safe_message = message.encode("utf-8", "backslashreplace").decode("utf-8")
         print(
             Fore.LIGHTBLACK_EX
             + datetime.now().strftime("[%Y:%m:%d ~ %H:%M:%S] |")
@@ -223,7 +225,7 @@ class animix:
                 else:
                     self.log("💸 Super Token: 0", Fore.LIGHTBLUE_EX)
 
-                # Mekanik baru: Kelola clan
+                # New mechanic: Manage clan
                 clan_id = user_info.get("clan_id")
                 if clan_id:
                     if clan_id == 4425:
@@ -299,56 +301,117 @@ class animix:
                 if bonus_response_reg is None or bonus_response_reg.status_code != 200:
                     self.log("⚠️ Failed to retrieve regular bonus data.", Fore.YELLOW)
                 else:
-                    bonus_data_reg = self.decode_response(bonus_response_reg) if bonus_response_reg.text else {}
+                    bonus_data_reg = (
+                        self.decode_response(bonus_response_reg)
+                        if bonus_response_reg.text
+                        else {}
+                    )
                     if bonus_data_reg and "result" in bonus_data_reg:
                         bonus_result = bonus_data_reg["result"]
                         current_step = bonus_result.get("current_step", 0)
                         total_step = bonus_result.get("total_step", 200)
-                        
+
                         if current_step >= total_step:
-                            self.log("✅ Regular bonus threshold reached. No regular gacha needed.", Fore.CYAN)
+                            self.log(
+                                "✅ Regular bonus threshold reached. No regular gacha needed.",
+                                Fore.CYAN,
+                            )
                         else:
                             missing_spins = total_step - current_step
                             spins_to_do = min(missing_spins, self.token_reguler)
-                            self.log(f"🎲 Initiating {spins_to_do} regular gacha spin(s) (missing {missing_spins} spins for bonus)!", Fore.CYAN)
+                            self.log(
+                                f"🎲 Initiating {spins_to_do} regular gacha spin(s) (missing {missing_spins} spins for bonus)!",
+                                Fore.CYAN,
+                            )
                             for i in range(spins_to_do):
                                 req_url = f"{self.BASE_URL}pet/dna/gacha"
                                 payload = {"amount": 1, "is_super": False}
                                 try:
-                                    response = requests.post(req_url, headers=headers, json=payload)
+                                    response = requests.post(
+                                        req_url, headers=headers, json=payload
+                                    )
                                     if response is None or response.status_code != 200:
-                                        self.log("⚠️ Invalid response from regular gacha spin. Skipping spin.", Fore.YELLOW)
+                                        self.log(
+                                            "⚠️ Invalid response from regular gacha spin. Skipping spin.",
+                                            Fore.YELLOW,
+                                        )
                                         continue
-                                    data = self.decode_response(response) if response.text else {}
+                                    data = (
+                                        self.decode_response(response)
+                                        if response.text
+                                        else {}
+                                    )
                                     if not data:
-                                        self.log("⚠️ Empty JSON response from regular gacha spin.", Fore.YELLOW)
+                                        self.log(
+                                            "⚠️ Empty JSON response from regular gacha spin.",
+                                            Fore.YELLOW,
+                                        )
                                         continue
                                     if "result" in data and "dna" in data["result"]:
                                         dna = data["result"]["dna"]
                                         if isinstance(dna, list):
-                                            self.log("🎉 You received multiple DNA items (Regular)!", Fore.GREEN)
+                                            self.log(
+                                                "🎉 You received multiple DNA items (Regular)!",
+                                                Fore.GREEN,
+                                            )
                                             for dna_item in dna:
                                                 name = dna_item.get("name", "Unknown")
-                                                dna_class = dna_item.get("class", "Unknown")
+                                                dna_class = dna_item.get(
+                                                    "class", "Unknown"
+                                                )
                                                 star = dna_item.get("star", "Unknown")
-                                                self.log(f"🧬 Name: {name}", Fore.LIGHTGREEN_EX)
-                                                self.log(f"🏷️ Class: {dna_class}", Fore.YELLOW)
-                                                self.log(f"⭐ Star: {star}", Fore.MAGENTA)
+                                                self.log(
+                                                    f"🧬 Name: {name}",
+                                                    Fore.LIGHTGREEN_EX,
+                                                )
+                                                self.log(
+                                                    f"🏷️ Class: {dna_class}", Fore.YELLOW
+                                                )
+                                                self.log(
+                                                    f"⭐ Star: {star}", Fore.MAGENTA
+                                                )
                                         else:
-                                            name = dna.get("name", "Unknown") if dna else "Unknown"
-                                            dna_class = dna.get("class", "Unknown") if dna else "Unknown"
-                                            star = dna.get("star", "Unknown") if dna else "Unknown"
-                                            self.log("🎉 You received a DNA item (Regular)!", Fore.GREEN)
-                                            self.log(f"🧬 Name: {name}", Fore.LIGHTGREEN_EX)
-                                            self.log(f"🏷️ Class: {dna_class}", Fore.YELLOW)
+                                            name = (
+                                                dna.get("name", "Unknown")
+                                                if dna
+                                                else "Unknown"
+                                            )
+                                            dna_class = (
+                                                dna.get("class", "Unknown")
+                                                if dna
+                                                else "Unknown"
+                                            )
+                                            star = (
+                                                dna.get("star", "Unknown")
+                                                if dna
+                                                else "Unknown"
+                                            )
+                                            self.log(
+                                                "🎉 You received a DNA item (Regular)!",
+                                                Fore.GREEN,
+                                            )
+                                            self.log(
+                                                f"🧬 Name: {name}", Fore.LIGHTGREEN_EX
+                                            )
+                                            self.log(
+                                                f"🏷️ Class: {dna_class}", Fore.YELLOW
+                                            )
                                             self.log(f"⭐ Star: {star}", Fore.MAGENTA)
-                                        # Update token_reguler berdasarkan respon gacha
-                                        self.token_reguler = data["result"].get("god_power", self.token_reguler)
+                                        # Update token_reguler based on gacha response
+                                        self.token_reguler = data["result"].get(
+                                            "god_power", self.token_reguler
+                                        )
                                     else:
-                                        self.log("⚠️ Regular gacha response structure is invalid.", Fore.RED)
+                                        self.log(
+                                            "⚠️ Regular gacha response structure is invalid.",
+                                            Fore.RED,
+                                        )
                                         continue
                                 except Exception as e:
-                                    self.log(f"❌ Error during regular gacha spin: {e}", Fore.RED)
+                                    self.log(
+                                        f"❌ Error during regular gacha spin: {e}",
+                                        Fore.RED,
+                                    )
                                     continue
                     else:
                         self.log("⚠️ Regular bonus data is invalid.", Fore.YELLOW)
@@ -365,55 +428,116 @@ class animix:
                 if bonus_response is None or bonus_response.status_code != 200:
                     self.log("⚠️ Failed to retrieve super bonus data.", Fore.YELLOW)
                 else:
-                    bonus_data = self.decode_response(bonus_response) if bonus_response.text else {}
+                    bonus_data = (
+                        self.decode_response(bonus_response)
+                        if bonus_response.text
+                        else {}
+                    )
                     if bonus_data and "result" in bonus_data:
                         bonus_result = bonus_data["result"]
                         current_step = bonus_result.get("current_step", 0)
                         total_step = bonus_result.get("total_step", 200)
-                        
+
                         if current_step >= total_step:
-                            self.log("✅ Super bonus threshold reached. No super gacha needed.", Fore.CYAN)
+                            self.log(
+                                "✅ Super bonus threshold reached. No super gacha needed.",
+                                Fore.CYAN,
+                            )
                         else:
                             missing_spins = total_step - current_step
                             spins_to_do = min(missing_spins, self.token_super)
-                            self.log(f"🎲 Initiating {spins_to_do} super gacha spin(s) (missing {missing_spins} spins for bonus)!", Fore.CYAN)
+                            self.log(
+                                f"🎲 Initiating {spins_to_do} super gacha spin(s) (missing {missing_spins} spins for bonus)!",
+                                Fore.CYAN,
+                            )
                             for i in range(spins_to_do):
                                 req_url = f"{self.BASE_URL}pet/dna/gacha"
                                 payload = {"amount": 1, "is_super": True}
                                 try:
-                                    response = requests.post(req_url, headers=headers, json=payload)
+                                    response = requests.post(
+                                        req_url, headers=headers, json=payload
+                                    )
                                     if response is None or response.status_code != 200:
-                                        self.log("⚠️ Invalid response from super gacha spin. Skipping spin.", Fore.YELLOW)
+                                        self.log(
+                                            "⚠️ Invalid response from super gacha spin. Skipping spin.",
+                                            Fore.YELLOW,
+                                        )
                                         continue
-                                    data = self.decode_response(response) if response.text else {}
+                                    data = (
+                                        self.decode_response(response)
+                                        if response.text
+                                        else {}
+                                    )
                                     if not data:
-                                        self.log("⚠️ Empty JSON response from super gacha spin.", Fore.YELLOW)
+                                        self.log(
+                                            "⚠️ Empty JSON response from super gacha spin.",
+                                            Fore.YELLOW,
+                                        )
                                         continue
                                     if "result" in data and "dna" in data["result"]:
                                         dna = data["result"]["dna"]
                                         if isinstance(dna, list):
-                                            self.log("🎉 You received multiple DNA items (Super)!", Fore.GREEN)
+                                            self.log(
+                                                "🎉 You received multiple DNA items (Super)!",
+                                                Fore.GREEN,
+                                            )
                                             for dna_item in dna:
                                                 name = dna_item.get("name", "Unknown")
-                                                dna_class = dna_item.get("class", "Unknown")
+                                                dna_class = dna_item.get(
+                                                    "class", "Unknown"
+                                                )
                                                 star = dna_item.get("star", "Unknown")
-                                                self.log(f"🧬 Name: {name}", Fore.LIGHTGREEN_EX)
-                                                self.log(f"🏷️ Class: {dna_class}", Fore.YELLOW)
-                                                self.log(f"⭐ Star: {star}", Fore.MAGENTA)
+                                                self.log(
+                                                    f"🧬 Name: {name}",
+                                                    Fore.LIGHTGREEN_EX,
+                                                )
+                                                self.log(
+                                                    f"🏷️ Class: {dna_class}", Fore.YELLOW
+                                                )
+                                                self.log(
+                                                    f"⭐ Star: {star}", Fore.MAGENTA
+                                                )
                                         else:
-                                            name = dna.get("name", "Unknown") if dna else "Unknown"
-                                            dna_class = dna.get("class", "Unknown") if dna else "Unknown"
-                                            star = dna.get("star", "Unknown") if dna else "Unknown"
-                                            self.log("🎉 You received a DNA item (Super)!", Fore.GREEN)
-                                            self.log(f"🧬 Name: {name}", Fore.LIGHTGREEN_EX)
-                                            self.log(f"🏷️ Class: {dna_class}", Fore.YELLOW)
+                                            name = (
+                                                dna.get("name", "Unknown")
+                                                if dna
+                                                else "Unknown"
+                                            )
+                                            dna_class = (
+                                                dna.get("class", "Unknown")
+                                                if dna
+                                                else "Unknown"
+                                            )
+                                            star = (
+                                                dna.get("star", "Unknown")
+                                                if dna
+                                                else "Unknown"
+                                            )
+                                            self.log(
+                                                "🎉 You received a DNA item (Super)!",
+                                                Fore.GREEN,
+                                            )
+                                            self.log(
+                                                f"🧬 Name: {name}", Fore.LIGHTGREEN_EX
+                                            )
+                                            self.log(
+                                                f"🏷️ Class: {dna_class}", Fore.YELLOW
+                                            )
                                             self.log(f"⭐ Star: {star}", Fore.MAGENTA)
-                                        self.token_super = data["result"].get("god_power", self.token_super)
+                                        self.token_super = data["result"].get(
+                                            "god_power", self.token_super
+                                        )
                                     else:
-                                        self.log("⚠️ Super gacha response structure is invalid.", Fore.RED)
+                                        self.log(
+                                            "⚠️ Super gacha response structure is invalid.",
+                                            Fore.RED,
+                                        )
                                         continue
                                 except Exception as e:
-                                    self.log(f"❌ Error during super gacha spin: {e}", Fore.RED)
+                                    self.log(
+                                        f"❌ Error during super gacha spin: {e}",
+                                        Fore.RED,
+                                    )
                                     continue
                     else:
                         self.log("⚠️ Super bonus data is invalid.", Fore.YELLOW)
@@ -429,7 +553,11 @@ class animix:
             if bonus_response_reg is None or bonus_response_reg.status_code != 200:
                 self.log("⚠️ Regular bonus check response is invalid.", Fore.YELLOW)
             else:
-                bonus_data_reg = self.decode_response(bonus_response_reg) if bonus_response_reg.text else {}
+                bonus_data_reg = (
+                    self.decode_response(bonus_response_reg)
+                    if bonus_response_reg.text
+                    else {}
+                )
                 if bonus_data_reg and "result" in bonus_data_reg:
                     bonus_result = bonus_data_reg["result"]
                     current_step = bonus_result.get("current_step", 0)
@@ -443,26 +571,54 @@ class animix:
                         for reward_no in rewards_to_claim:
                             claim_url = f"{self.BASE_URL}pet/dna/gacha/bonus/claim"
                             claim_payload = {"reward_no": reward_no, "is_super": False}
-                            self.log(f"🎁 Claiming regular bonus reward {reward_no}...", Fore.CYAN)
+                            self.log(
+                                f"🎁 Claiming regular bonus reward {reward_no}...",
+                                Fore.CYAN,
+                            )
                             try:
-                                claim_response = requests.post(claim_url, headers=headers, json=claim_payload)
-                                if claim_response is None or claim_response.status_code != 200:
-                                    self.log(f"⚠️ Invalid response for regular bonus reward {reward_no}.", Fore.YELLOW)
+                                claim_response = requests.post(
+                                    claim_url, headers=headers, json=claim_payload
+                                )
+                                if (
+                                    claim_response is None
+                                    or claim_response.status_code != 200
+                                ):
+                                    self.log(
+                                        f"⚠️ Invalid response for regular bonus reward {reward_no}.",
+                                        Fore.YELLOW,
+                                    )
                                     continue
-                                claim_data = self.decode_response(claim_response) if claim_response.text else {}
+                                claim_data = (
+                                    self.decode_response(claim_response)
+                                    if claim_response.text
+                                    else {}
+                                )
                                 if claim_data.get("error_code") is None:
                                     result = claim_data.get("result", {})
                                     name = result.get("name", "Unknown")
-                                    description = result.get("description", "No description")
+                                    description = result.get(
+                                        "description", "No description"
+                                    )
                                     amount = result.get("amount", 0)
-                                    self.log(f"✅ Successfully claimed regular bonus reward {reward_no}!", Fore.GREEN)
+                                    self.log(
+                                        f"✅ Successfully claimed regular bonus reward {reward_no}!",
+                                        Fore.GREEN,
+                                    )
                                     self.log(f"📦 Name: {name}", Fore.LIGHTGREEN_EX)
-                                    self.log(f"ℹ️ Description: {description}", Fore.YELLOW)
+                                    self.log(
+                                        f"ℹ️ Description: {description}", Fore.YELLOW
+                                    )
                                     self.log(f"🔢 Amount: {amount}", Fore.MAGENTA)
                                 else:
-                                    self.log(f"⚠️ Failed to claim regular bonus reward {reward_no}: {claim_data.get('message', 'Unknown error')}", Fore.YELLOW)
+                                    self.log(
+                                        f"⚠️ Failed to claim regular bonus reward {reward_no}: {claim_data.get('message', 'Unknown error')}",
+                                        Fore.YELLOW,
+                                    )
                             except Exception as e:
-                                self.log(f"❌ Error claiming regular bonus reward {reward_no}: {e}", Fore.RED)
+                                self.log(
+                                    f"❌ Error claiming regular bonus reward {reward_no}: {e}",
+                                    Fore.RED,
+                                )
                                 continue
                     else:
                         self.log("ℹ️ Regular bonus not ready to claim yet.", Fore.YELLOW)
@@ -478,7 +634,11 @@ class animix:
             if bonus_response_super is None or bonus_response_super.status_code != 200:
                 self.log("⚠️ Super bonus check response is invalid.", Fore.YELLOW)
             else:
-                bonus_data_super = self.decode_response(bonus_response_super) if bonus_response_super.text else {}
+                bonus_data_super = (
+                    self.decode_response(bonus_response_super)
+                    if bonus_response_super.text
+                    else {}
+                )
                 if bonus_data_super and "result" in bonus_data_super:
                     bonus_result = bonus_data_super["result"]
                     current_step = bonus_result.get("current_step", 0)
@@ -492,26 +652,54 @@ class animix:
                         for reward_no in rewards_to_claim:
                             claim_url = f"{self.BASE_URL}pet/dna/gacha/bonus/claim"
                             claim_payload = {"reward_no": reward_no, "is_super": True}
-                            self.log(f"🎁 Claiming super bonus reward {reward_no}...", Fore.CYAN)
+                            self.log(
+                                f"🎁 Claiming super bonus reward {reward_no}...",
+                                Fore.CYAN,
+                            )
                             try:
-                                claim_response = requests.post(claim_url, headers=headers, json=claim_payload)
-                                if claim_response is None or claim_response.status_code != 200:
-                                    self.log(f"⚠️ Invalid response for super bonus reward {reward_no}.", Fore.YELLOW)
+                                claim_response = requests.post(
+                                    claim_url, headers=headers, json=claim_payload
+                                )
+                                if (
+                                    claim_response is None
+                                    or claim_response.status_code != 200
+                                ):
+                                    self.log(
+                                        f"⚠️ Invalid response for super bonus reward {reward_no}.",
+                                        Fore.YELLOW,
+                                    )
                                     continue
-                                claim_data = self.decode_response(claim_response) if claim_response.text else {}
+                                claim_data = (
+                                    self.decode_response(claim_response)
+                                    if claim_response.text
+                                    else {}
+                                )
                                 if claim_data.get("error_code") is None:
                                     result = claim_data.get("result", {})
                                     name = result.get("name", "Unknown")
-                                    description = result.get("description", "No description")
+                                    description = result.get(
+                                        "description", "No description"
+                                    )
                                     amount = result.get("amount", 0)
-                                    self.log(f"✅ Successfully claimed super bonus reward {reward_no}!", Fore.GREEN)
+                                    self.log(
+                                        f"✅ Successfully claimed super bonus reward {reward_no}!",
+                                        Fore.GREEN,
+                                    )
                                     self.log(f"📦 Name: {name}", Fore.LIGHTGREEN_EX)
-                                    self.log(f"ℹ️ Description: {description}", Fore.YELLOW)
+                                    self.log(
+                                        f"ℹ️ Description: {description}", Fore.YELLOW
+                                    )
                                     self.log(f"🔢 Amount: {amount}", Fore.MAGENTA)
                                 else:
-                                    self.log(f"⚠️ Failed to claim super bonus reward {reward_no}: {claim_data.get('message', 'Unknown error')}", Fore.YELLOW)
+                                    self.log(
+                                        f"⚠️ Failed to claim super bonus reward {reward_no}: {claim_data.get('message', 'Unknown error')}",
+                                        Fore.YELLOW,
+                                    )
                             except Exception as e:
-                                self.log(f"❌ Error claiming super bonus reward {reward_no}: {e}", Fore.RED)
+                                self.log(
+                                    f"❌ Error claiming super bonus reward {reward_no}: {e}",
+                                    Fore.RED,
+                                )
                                 continue
                     else:
                         self.log("ℹ️ Super bonus not ready to claim yet.", Fore.YELLOW)
@@ -519,7 +707,7 @@ class animix:
                     self.log("⚠️ Super bonus data is invalid.", Fore.YELLOW)
         except Exception as e:
             self.log(f"❌ Error during super bonus claim check: {e}", Fore.RED)
-        
+
         # REFRESH TOKENS
         time.sleep(1)
         self.log("🔄 Refreshing gacha tokens...", Fore.CYAN)
@@ -531,15 +719,24 @@ class animix:
             if "result" in data:
                 user_info = data["result"]
                 inventory = user_info.get("inventory", [])
-                token_reguler = next((item for item in inventory if item["id"] == 1), None)
-                token_super = next((item for item in inventory if item["id"] == 3), None)
+                token_reguler = next(
+                    (item for item in inventory if item["id"] == 1), None
+                )
+                token_super = next(
+                    (item for item in inventory if item["id"] == 3), None
+                )
                 if token_reguler:
-                    self.log(f"💵 Regular Token: {token_reguler['amount']}", Fore.LIGHTBLUE_EX)
+                    self.log(
+                        f"💵 Regular Token: {token_reguler['amount']}",
+                        Fore.LIGHTBLUE_EX,
+                    )
                     self.token_reguler = token_reguler["amount"]
                 else:
                     self.log("💵 Regular Token: 0", Fore.LIGHTBLUE_EX)
                 if token_super:
-                    self.log(f"💸 Super Token: {token_super['amount']}", Fore.LIGHTBLUE_EX)
+                    self.log(
+                        f"💸 Super Token: {token_super['amount']}", Fore.LIGHTBLUE_EX
+                    )
                     self.token_super = token_super["amount"]
                 else:
                     self.log("💸 Super Token: 0", Fore.LIGHTBLUE_EX)
@@ -550,22 +747,23 @@ class animix:
 
     def mix(self) -> None:
         """
-        Menggabungkan DNA untuk membuat pet baru tanpa membedakan antara dad dan mom.
-        Untuk config-specified mixing, sebelum eksekusi, sistem akan menghitung duplicate count
-        tiap ID di konfigurasi dan membandingkannya dengan total available 'amount' untuk DNA tersebut.
-        Jika available amount tidak mencukupi, pasangan mixing yang memerlukan ID tersebut tidak akan dieksekusi.
-        Jika mencukupi (atau lebih), maka semua pasangan dieksekusi tanpa pengurangan nilai amount.
-        Random mixing menggunakan metode lama (mengabaikan DNA yang ID-nya sudah ditetapkan di config).
+        Combines DNA to create new pets without distinguishing between dad and mom.
+        For config-specified mixing, before execution, the system will count the duplicate count
+        of each ID in the configuration and compare it with the total available 'amount' for that DNA.
+        If the available amount is insufficient, the mixing pairs that require that ID will not be executed.
+        If sufficient (or more), then all pairs are executed without reducing the amount value.
+        Random mixing uses the old method (ignoring DNA whose ID is already specified in the config).
 
-        Setelah phase mixing spesifik, ditambahkan phase baru "mission failed mixing"
-        (yang memeriksa resep dan requirement dari file mission_failed.json) sebelum melanjutkan ke random mixing.
-        
-        Seluruh mix yang berhasil dari semua phase akan dicatat.
-        Di akhir fungsi, dicoba untuk mengirim catatan mix ke API eksternal
-        (POST ke https://lib-mix-animix.vercel.app/api/mix dengan header Content-Type: application/json).
+        After the specific mixing phase, a new phase "mission failed mixing"
+        (which checks recipes and requirements from the mission_failed.json file) is added before proceeding to random mixing.
+
+        All successful mixes from all phases will be recorded.
+        At the end of the function, try to send the mix record to an external API
+        (POST to https://lib-mix-animix.vercel.app/api/mix with Content-Type header: application/json).
         """
-        import json, time  # pastikan modul diimpor bila belum
-        successful_mixes = []  # List untuk mencatat hasil mixing yang berhasil
+        import json, time  # make sure the module is imported if not already
+
+        successful_mixes = []  # List to record successful mixes
 
         req_url = f"{self.BASE_URL}pet/dna/list"
         mix_url = f"{self.BASE_URL}pet/mix"
@@ -580,7 +778,7 @@ class animix:
             dna_list = []
             if "result" in data and isinstance(data["result"], list):
                 for dna in data["result"]:
-                    # Pastikan field 'star' ada dan jika ada field 'type', maka bisa digunakan di phase mission failed.
+                    # Ensure 'star' field exists and if there is a 'type' field, it can be used in the mission failed phase.
                     self.log(
                         f"✅ DNA found: Item ID {dna['item_id']} (Amount: {dna.get('amount', 0)}, Star: {dna['star']}, Can Mom: {dna.get('can_mom', 'N/A')})",
                         Fore.GREEN,
@@ -591,7 +789,10 @@ class animix:
                 return
 
             if len(dna_list) < 2:
-                self.log("❌ Not enough DNA data for mixing. At least two entries are required.", Fore.RED)
+                self.log(
+                    "❌ Not enough DNA data for mixing. At least two entries are required.",
+                    Fore.RED,
+                )
                 return
 
             self.log(
@@ -605,7 +806,7 @@ class animix:
             pet_mix_config = self.config.get("pet_mix", [])
             config_ids = set()
             if pet_mix_config:
-                # Kumpulkan semua ID dari config agar dikecualikan dari random mixing.
+                # Collect all IDs from config to be excluded from random mixing.
                 for pair in pet_mix_config:
                     if len(pair) == 2:
                         config_ids.add(str(pair[0]))
@@ -613,7 +814,7 @@ class animix:
 
                 self.log("🔄 Attempting config-specified pet mixing...", Fore.CYAN)
 
-                # Buat mapping dari item_id ke total available amount (jika ada duplikat, jumlahkan)
+                # Create a mapping from item_id to total available amount (if there are duplicates, sum them)
                 available_config_dna = {}
                 for dna in dna_list:
                     key = str(dna["item_id"])
@@ -622,15 +823,17 @@ class animix:
                     else:
                         available_config_dna[key] = dict(dna)
 
-                # Hitung duplicate count tiap ID di konfigurasi
+                # Count duplicate count for each ID in the configuration
                 config_required_counts = {}
                 for pair in pet_mix_config:
                     if len(pair) == 2:
                         for id_val in pair:
                             key = str(id_val)
-                            config_required_counts[key] = config_required_counts.get(key, 0) + 1
+                            config_required_counts[key] = (
+                                config_required_counts.get(key, 0) + 1
+                            )
 
-                # Cek apakah available amount sudah mencukupi untuk setiap ID di config
+                # Check if the available amount is sufficient for each ID in the config
                 insufficient_ids = set()
                 for key, required in config_required_counts.items():
                     available = available_config_dna.get(key, {}).get("amount", 0)
@@ -641,7 +844,7 @@ class animix:
                             Fore.YELLOW,
                         )
 
-                # Eksekusi mixing untuk pasangan config
+                # Execute mixing for config pairs
                 for pair in pet_mix_config:
                     if len(pair) != 2:
                         self.log(f"⚠️ Invalid pet mix pair: {pair}", Fore.YELLOW)
@@ -651,9 +854,12 @@ class animix:
                     key1 = str(id1_config)
                     key2 = str(id2_config)
 
-                    # Jika salah satu ID tidak mencukupi, lewati pasangan ini.
+                    # If either ID is insufficient, skip this pair
                     if key1 in insufficient_ids or key2 in insufficient_ids:
-                        self.log(f"⚠️ Skipping config pair {pair} due to insufficient quantity.", Fore.YELLOW)
+                        self.log(
+                            f"⚠️ Skipping config pair {pair} due to insufficient quantity.",
+                            Fore.YELLOW,
+                        )
                         continue
 
                     dna1 = available_config_dna.get(key1)
@@ -668,63 +874,103 @@ class animix:
                         )
                         while True:
                             try:
-                                mix_response = requests.post(mix_url, headers=headers, json=payload, timeout=10)
+                                mix_response = requests.post(
+                                    mix_url, headers=headers, json=payload, timeout=10
+                                )
                                 if mix_response.status_code == 200:
                                     mix_data = self.decode_response(mix_response)
-                                    if "result" in mix_data and "pet" in mix_data["result"]:
+                                    if (
+                                        "result" in mix_data
+                                        and "pet" in mix_data["result"]
+                                    ):
                                         pet_info = mix_data["result"]["pet"]
                                         self.log(
                                             f"🎉 New pet created: {pet_info['name']} (ID: {pet_info['pet_id']})",
                                             Fore.GREEN,
                                         )
-                                        # Catat hasil mix yang berhasil
-                                        successful_mixes.append({
-                                            "pet_name": pet_info.get("name", "Unknown"),
-                                            "pet_id": pet_info.get("pet_id", "N/A"),
-                                            "pet_class": pet_info.get("class", "N/A"),
-                                            "pet_star": str(pet_info.get("star", "N/A")),
-                                            # Gunakan data dummy untuk DNA di sini
-                                            "dna": {"dna1id": dna1['item_id'], "dna2id": dna2['item_id']}
-                                        })
+                                        # Record successful mix
+                                        successful_mixes.append(
+                                            {
+                                                "pet_name": pet_info.get(
+                                                    "name", "Unknown"
+                                                ),
+                                                "pet_id": pet_info.get("pet_id", "N/A"),
+                                                "pet_class": pet_info.get(
+                                                    "class", "N/A"
+                                                ),
+                                                "pet_star": str(
+                                                    pet_info.get("star", "N/A")
+                                                ),
+                                                # Use dummy data for DNA here
+                                                "dna": {
+                                                    "dna1id": dna1["item_id"],
+                                                    "dna2id": dna2["item_id"],
+                                                },
+                                            }
+                                        )
                                         break
                                     else:
-                                        message = mix_data.get("message", "No message provided.")
-                                        self.log(f"⚠️ Mixing failed for config pair {pair}: {message}", Fore.YELLOW)
+                                        message = mix_data.get(
+                                            "message", "No message provided."
+                                        )
+                                        self.log(
+                                            f"⚠️ Mixing failed for config pair {pair}: {message}",
+                                            Fore.YELLOW,
+                                        )
                                         break
                                 elif mix_response.status_code == 429:
-                                    self.log("⏳ Too many requests (429). Retrying in 5 seconds...", Fore.YELLOW)
+                                    self.log(
+                                        "⏳ Too many requests (429). Retrying in 5 seconds...",
+                                        Fore.YELLOW,
+                                    )
                                     time.sleep(5)
                                 else:
-                                    self.log(f"❌ Request failed for config pair {pair} (Status: {mix_response.status_code})", Fore.RED)
+                                    self.log(
+                                        f"❌ Request failed for config pair {pair} (Status: {mix_response.status_code})",
+                                        Fore.RED,
+                                    )
                                     break
                             except requests.exceptions.RequestException as e:
-                                self.log(f"❌ Request failed for config pair {pair}: {e}", Fore.RED)
+                                self.log(
+                                    f"❌ Request failed for config pair {pair}: {e}",
+                                    Fore.RED,
+                                )
                                 break
                     else:
-                        self.log(f"⚠️ Unable to find matching DNA for config pair: {pair}", Fore.YELLOW)
+                        self.log(
+                            f"⚠️ Unable to find matching DNA for config pair: {pair}",
+                            Fore.YELLOW,
+                        )
 
             # -------------------------------------------
-            # Mission Failed Mixing Phase (baru)
-            # Dipindahkan setelah config-specified dan sebelum random mixing.
+            # Mission Failed Mixing Phase (new)
+            # Moved after config-specified and before random mixing.
             # -------------------------------------------
             self.log("🔄 Starting mission failed mixing phase...", Fore.CYAN)
-            # 1. Refetch DNA list untuk mendapatkan data terbaru
+            # 1. Refetch DNA list to get the latest data
             try:
                 mission_response = requests.get(req_url, headers=headers, timeout=10)
                 mission_response.raise_for_status()
                 mission_data = self.decode_response(mission_response)
                 mission_dna_list = []
-                if "result" in mission_data and isinstance(mission_data["result"], list):
+                if "result" in mission_data and isinstance(
+                    mission_data["result"], list
+                ):
                     mission_dna_list = mission_data["result"]
                 else:
                     self.log("⚠️ No DNA found in the mission failed phase.", Fore.YELLOW)
             except requests.exceptions.RequestException as e:
-                self.log(f"❌ Request failed while fetching DNA list for mission failed: {e}", Fore.RED)
+                self.log(
+                    f"❌ Request failed while fetching DNA list for mission failed: {e}",
+                    Fore.RED,
+                )
                 mission_dna_list = []
 
-            # 2. Ambil resep mixing dari API eksternal (GET tanpa headers)
+            # 2. Fetch mixing recipes from external API (GET without headers)
             try:
-                recipe_response = requests.get("https://lib-mix-animix.vercel.app/api/mix", timeout=10)
+                recipe_response = requests.get(
+                    "https://lib-mix-animix-psi.vercel.app/api/mix", timeout=10
+                )
                 recipe_response.raise_for_status()
                 recipe_data = recipe_response.json()
                 recipes = recipe_data.get("record", [])
@@ -732,7 +978,7 @@ class animix:
                 self.log(f"❌ Request failed while fetching recipe list: {e}", Fore.RED)
                 recipes = []
 
-            # 3. Baca file mission_failed.json (pastikan file ini berada di path yang benar)
+            # 3. Read mission_failed.json file (make sure this file is in the correct path)
             try:
                 with open("mission_failed.json", "r") as f:
                     mission_failed_data = json.load(f)
@@ -740,32 +986,38 @@ class animix:
                 self.log(f"❌ Failed to load mission_failed.json: {e}", Fore.RED)
                 mission_failed_data = {}
 
-            # 4. Iterasi setiap resep dan periksa requirement.
-            #    Misalnya, pada mission_failed_data setiap entry memiliki format:
+            # 4. Iterate through each recipe and check requirements.
+            #    For example, in mission_failed_data each entry has the format:
             #    [ [<element>, <star_required>], ... ]
             for recipe in recipes:
                 for mission_requirements in mission_failed_data.values():
                     all_requirements_met = True
-                    selected_dnas = {}  # mapping element -> dna terpilih
+                    selected_dnas = {}  # mapping element -> selected dna
                     for req in mission_requirements:
-                        req_element = req[0].lower()  # misalnya "wind"
+                        req_element = req[0].lower()  # e.g., "wind"
                         req_star = req[1]
-                        # Cari DNA pada mission_dna_list yang memenuhi: star yang sama dan field "type" sama dengan req_element
+                        # Find DNA in mission_dna_list that meets: same star and "type" field same as req_element
                         matching_dna = next(
-                            (dna for dna in mission_dna_list 
-                            if str(dna.get("star")) == str(req_star) 
-                            and dna.get("type", "").lower() == req_element 
-                            and dna.get("amount", 0) > 0),
-                            None
+                            (
+                                dna
+                                for dna in mission_dna_list
+                                if str(dna.get("star")) == str(req_star)
+                                and dna.get("type", "").lower() == req_element
+                                and dna.get("amount", 0) > 0
+                            ),
+                            None,
                         )
                         if matching_dna:
                             selected_dnas[req_element] = matching_dna
                         else:
                             all_requirements_met = False
-                            self.log(f"⚠️ Requirement not met: {req_element} with star {req_star}", Fore.YELLOW)
+                            self.log(
+                                f"⚠️ Requirement not met: {req_element} with star {req_star}",
+                                Fore.YELLOW,
+                            )
                             break
 
-                    # Jika seluruh requirement terpenuhi dan setidaknya ada 2 DNA terpilih untuk di-mix
+                    # If all requirements are met and at least 2 selected DNAs for mixing
                     if all_requirements_met and len(selected_dnas) >= 2:
                         dna_values = list(selected_dnas.values())
                         dna1 = dna_values[0]
@@ -778,44 +1030,74 @@ class animix:
                         )
                         while True:
                             try:
-                                mix_response = requests.post(mix_url, headers=headers, json=payload, timeout=10)
+                                mix_response = requests.post(
+                                    mix_url, headers=headers, json=payload, timeout=10
+                                )
                                 if mix_response.status_code == 200:
                                     mix_data = self.decode_response(mix_response)
-                                    if "result" in mix_data and "pet" in mix_data["result"]:
+                                    if (
+                                        "result" in mix_data
+                                        and "pet" in mix_data["result"]
+                                    ):
                                         pet_info = mix_data["result"]["pet"]
                                         self.log(
                                             f"🎉 New pet created from mission failed mixing: {pet_info['name']} (ID: {pet_info['pet_id']})",
                                             Fore.GREEN,
                                         )
-                                        successful_mixes.append({
-                                            "pet_name": pet_info.get("name", "Unknown"),
-                                            "pet_id": pet_info.get("pet_id", "N/A"),
-                                            "pet_class": pet_info.get("class", "N/A"),
-                                            "pet_star": str(pet_info.get("star", "N/A")),
-                                            "dna": {"dna1id": dna1['item_id'], "dna2id": dna2['item_id']}
-                                        })
+                                        successful_mixes.append(
+                                            {
+                                                "pet_name": pet_info.get(
+                                                    "name", "Unknown"
+                                                ),
+                                                "pet_id": pet_info.get("pet_id", "N/A"),
+                                                "pet_class": pet_info.get(
+                                                    "class", "N/A"
+                                                ),
+                                                "pet_star": str(
+                                                    pet_info.get("star", "N/A")
+                                                ),
+                                                "dna": {
+                                                    "dna1id": dna1["item_id"],
+                                                    "dna2id": dna2["item_id"],
+                                                },
+                                            }
+                                        )
                                         break
                                     else:
-                                        message = mix_data.get("message", "No message provided.")
-                                        self.log(f"⚠️ Mission failed mixing failed for recipe {recipe.get('pet_name', 'Unknown')}: {message}", Fore.YELLOW)
+                                        message = mix_data.get(
+                                            "message", "No message provided."
+                                        )
+                                        self.log(
+                                            f"⚠️ Mission failed mixing failed for recipe {recipe.get('pet_name', 'Unknown')}: {message}",
+                                            Fore.YELLOW,
+                                        )
                                         break
                                 elif mix_response.status_code == 429:
-                                    self.log("⏳ Too many requests (429) in mission failed mixing. Retrying in 5 seconds...", Fore.YELLOW)
+                                    self.log(
+                                        "⏳ Too many requests (429) in mission failed mixing. Retrying in 5 seconds...",
+                                        Fore.YELLOW,
+                                    )
                                     time.sleep(5)
                                 else:
-                                    self.log(f"❌ Mission failed mixing request failed (Status: {mix_response.status_code})", Fore.RED)
+                                    self.log(
+                                        f"❌ Mission failed mixing request failed (Status: {mix_response.status_code})",
+                                        Fore.RED,
+                                    )
                                     break
                             except requests.exceptions.RequestException as e:
-                                self.log(f"❌ Mission failed mixing request failed: {e}", Fore.RED)
+                                self.log(
+                                    f"❌ Mission failed mixing request failed: {e}",
+                                    Fore.RED,
+                                )
                                 break
-                        # Jika satu mixing berhasil, keluar dari iterasi resep
+                        # If one mixing is successful, exit the recipe iteration
                         break
                 else:
                     continue
                 break
 
             # -------------------------------------------
-            # Random mixing (metode lama)
+            # Random mixing (old method)
             # -------------------------------------------
             self.log("🔄 Mixing remaining DNA (star below 5)...", Fore.CYAN)
             n = len(dna_list)
@@ -830,54 +1112,87 @@ class animix:
                     if dna_list[j].get("amount", 0) <= 0:
                         continue
                     if dna_list[i]["star"] < 5 and dna_list[j]["star"] < 5:
-                        payload = {"dad_id": dna_list[i]["item_id"], "mom_id": dna_list[j]["item_id"]}
+                        payload = {
+                            "dad_id": dna_list[i]["item_id"],
+                            "mom_id": dna_list[j]["item_id"],
+                        }
                         self.log(
                             f"🔄 Mixing DNA pair: Item IDs ({dna_list[i]['item_id']}, {dna_list[j]['item_id']})",
                             Fore.CYAN,
                         )
                         while True:
                             try:
-                                mix_response = requests.post(mix_url, headers=headers, json=payload, timeout=10)
+                                mix_response = requests.post(
+                                    mix_url, headers=headers, json=payload, timeout=10
+                                )
                                 if mix_response.status_code == 200:
                                     mix_data = self.decode_response(mix_response)
-                                    if "result" in mix_data and "pet" in mix_data["result"]:
+                                    if (
+                                        "result" in mix_data
+                                        and "pet" in mix_data["result"]
+                                    ):
                                         pet_info = mix_data["result"]["pet"]
                                         self.log(
                                             f"🎉 New pet created: {pet_info['name']} (ID: {pet_info['pet_id']})",
                                             Fore.GREEN,
                                         )
-                                        successful_mixes.append({
-                                            "pet_name": pet_info.get("name", "Unknown"),
-                                            "pet_id": pet_info.get("pet_id", "N/A"),
-                                            "pet_class": pet_info.get("class", "N/A"),
-                                            "pet_star": str(pet_info.get("star", "N/A")),
-                                            "dna": {"dna1id": dna_list[i]['item_id'], "dna2id": dna_list[j]['item_id']}
-                                        })
+                                        successful_mixes.append(
+                                            {
+                                                "pet_name": pet_info.get(
+                                                    "name", "Unknown"
+                                                ),
+                                                "pet_id": pet_info.get("pet_id", "N/A"),
+                                                "pet_class": pet_info.get(
+                                                    "class", "N/A"
+                                                ),
+                                                "pet_star": str(
+                                                    pet_info.get("star", "N/A")
+                                                ),
+                                                "dna": {
+                                                    "dna1id": dna_list[i]["item_id"],
+                                                    "dna2id": dna_list[j]["item_id"],
+                                                },
+                                            }
+                                        )
                                         break
                                     else:
-                                        message = mix_data.get("message", "No message provided.")
-                                        self.log(f"⚠️ Mixing failed for DNA pair ({dna_list[i]['item_id']}, {dna_list[j]['item_id']}): {message}", Fore.YELLOW)
+                                        message = mix_data.get(
+                                            "message", "No message provided."
+                                        )
+                                        self.log(
+                                            f"⚠️ Mixing failed for DNA pair ({dna_list[i]['item_id']}, {dna_list[j]['item_id']}): {message}",
+                                            Fore.YELLOW,
+                                        )
                                         break
                                 elif mix_response.status_code == 429:
-                                    self.log("⏳ Too many requests (429). Retrying in 5 seconds...", Fore.YELLOW)
+                                    self.log(
+                                        "⏳ Too many requests (429). Retrying in 5 seconds...",
+                                        Fore.YELLOW,
+                                    )
                                     time.sleep(5)
                                 else:
-                                    self.log(f"❌ Request failed for DNA pair ({dna_list[i]['item_id']}, {dna_list[j]['item_id']}) (Status: {mix_response.status_code})", Fore.RED)
+                                    self.log(
+                                        f"❌ Request failed for DNA pair ({dna_list[i]['item_id']}, {dna_list[j]['item_id']}) (Status: {mix_response.status_code})",
+                                        Fore.RED,
+                                    )
                                     break
                             except requests.exceptions.RequestException as e:
-                                self.log(f"❌ Request failed for DNA pair ({dna_list[i]['item_id']}, {dna_list[j]['item_id']}): {e}", Fore.RED)
+                                self.log(
+                                    f"❌ Request failed for DNA pair ({dna_list[i]['item_id']}, {dna_list[j]['item_id']}): {e}",
+                                    Fore.RED,
+                                )
                                 break
 
-           # -------------------------------------------
-            # Di akhir fungsi, kirim catatan mix yang berhasil ke API eksternal
+            # -------------------------------------------
+            # At the end of the function, send the successful mix log to the external API
             # -------------------------------------------
             self.log("🔄 Sending successful mixes log to external API...", Fore.CYAN)
-            external_api_url = "https://lib-mix-animix.vercel.app/api/mix"
+            external_api_url = "https://lib-mix-animix-psi.vercel.app/api/mix"
             external_headers = {"Content-Type": "application/json"}
             payload = successful_mixes if successful_mixes else []
 
-            max_retries = 5
-            retry_delay = 3  # detik
+            max_retries = 2
+            retry_delay = 3  # seconds
 
             for attempt in range(1, max_retries + 1):
                 try:
@@ -885,15 +1200,17 @@ class animix:
                         external_api_url,
                         headers=external_headers,
                         json=payload,
-                        timeout=10
+                        timeout=10,
                     )
                     if post_response.status_code == 201:
-                        self.log("🎉 Successfully sent mix log to external API.", Fore.GREEN)
+                        self.log(
+                            "🎉 Successfully sent mix log to external API.", Fore.GREEN
+                        )
                         break
                     else:
                         self.log(
                             f"❌ Attempt {attempt}: Failed to send mix log (Status: {post_response.status_code})",
-                            Fore.RED
+                            Fore.RED,
                         )
                 except requests.exceptions.RequestException as e:
                     self.log(f"❌ Attempt {attempt}: Request failed - {e}", Fore.RED)
@@ -980,215 +1297,141 @@ class animix:
             self.log(f"❌ Unexpected error: {e}", Fore.RED)
 
     def mission(self) -> None:
-        """List missions from API, claim finished missions, then assign pets
-        using mission.json definitions for missions that are not in progress.
-        Pet assignment is performed in three stages:
-        1. Fetch mission list and claim finished missions.
-        2. Read mission definitions from mission.json and sort by reward.
-        3. For missions yang belum berjalan, assign pets dengan memperbolehkan deploy pet yang sama
-        (bisa 2 atau 3 slot) selama jumlah (amount) mencukupi.
-        """
+        """Claim all missions, then deploy all. After that, run a manual simulation
+        to record any missions that failed to start into mission_failed.json
+        so that missing pets can be managed later in def mix."""
         import time, json, requests
 
         headers = {**self.HEADERS, "Tg-Init-Data": self.token}
         current_time = int(time.time())
-        
-        # === Reset file log gagal setiap kali fungsi dijalankan ===
         failed_log_path = "mission_failed.json"
+
+        # Reset failure log
         try:
             with open(failed_log_path, "w") as f:
-                json.dump({}, f)  # kosongkan
-            self.log("🧹 mission_failed.json reset for this session.", Fore.BLUE)
+                json.dump({}, f)
+            self.log("🧹 mission_failed.json has been reset for this session.", Fore.BLUE)
         except Exception as e:
             self.log(f"❌ Failed to reset mission_failed.json: {e}", Fore.RED)
 
         def log_failed_mission(mission_id, required_pets):
             try:
-                with open(failed_log_path, "r") as f:
-                    failed_data = json.load(f)
+                existing = json.load(open(failed_log_path))
             except:
-                failed_data = {}
-
-            failed_data[str(mission_id)] = [[req["class"], req["star"]] for req in required_pets]
-
+                existing = {}
+            existing[str(mission_id)] = [[r["class"], r["star"]] for r in required_pets]
             try:
                 with open(failed_log_path, "w") as f:
-                    json.dump(failed_data, f, indent=2)
-                self.log(f"📄 Mission {mission_id} logged in mission_failed.json", Fore.BLUE)
+                    json.dump(existing, f, indent=2)
+                self.log(f"📄 Mission {mission_id} recorded in mission_failed.json", Fore.BLUE)
             except Exception as e:
                 self.log(f"❌ Failed to write to mission_failed.json: {e}", Fore.RED)
 
         try:
-            # === STEP 1: Fetch mission list from API ===
-            mission_url = f"{self.BASE_URL}mission/list"
-            self.log("🔄 Fetching the current mission list...", Fore.CYAN)
-            mission_response = requests.get(mission_url, headers=headers)
-            mission_response.raise_for_status()
-            mission_data = mission_response.json()
-            missions = mission_data.get("result", [])
-            if not isinstance(missions, list):
-                self.log("❌ Invalid mission data format (expected a list).", Fore.RED)
-                return
-
-            # Persiapkan set untuk misi yang masih berjalan dan dictionary untuk pet yang sedang sibuk
-            in_progress_ids = set()
-            busy_pets = {}  # {pet_id: jumlah pemakaian}
-
-            for mission in missions:
-                mission_id = mission.get("mission_id")
-                mission_end_time = mission.get("end_time")
-                if not mission_id or not mission_end_time:
-                    continue
-
-                if current_time < mission_end_time:
-                    in_progress_ids.add(str(mission_id))
-                    pet_joined = mission.get("pet_joined", [])
-                    if isinstance(pet_joined, list):
-                        for pet_info in pet_joined:
-                            pet_id = pet_info.get("pet_id")
-                            if pet_id:
-                                busy_pets[pet_id] = busy_pets.get(pet_id, 0) + 1
-                    self.log(f"⚠️ Mission {mission_id} is still in progress.", Fore.YELLOW)
+            # STEP 0: Claim all missions in bulk
+            claim_all_url = f"{self.BASE_URL}mission/claim-all"
+            for attempt in (1, 2):
+                self.log(f"🔄 Claim-all attempt #{attempt}...", Fore.CYAN)
+                r = requests.post(claim_all_url, headers=headers, json={})
+                success = (r.status_code == 200 and r.json().get("result", {}).get("status"))
+                if success:
+                    self.log("✅ All missions successfully claimed via claim-all.", Fore.GREEN)
+                    break
                 else:
-                    # Claim misi yang sudah selesai
-                    claim_url = f"{self.BASE_URL}mission/claim"
-                    claim_payload = {"mission_id": mission_id}
-                    claim_response = requests.post(claim_url, headers=headers, json=claim_payload)
-                    if claim_response.status_code == 200:
-                        self.log(f"✅ Mission {mission_id} successfully claimed.", Fore.GREEN)
-                    else:
-                        self.log(f"❌ Failed to claim mission {mission_id} (Error: {claim_response.status_code}).", Fore.RED)
-                        self.log(f"🔍 Claim response details: {claim_response.text}", Fore.RED)
+                    self.log(f"⚠️ claim-all attempt #{attempt} failed.", Fore.YELLOW)
 
-            # === STEP 2: Read mission definitions from local mission.json ===
-            self.log("🔄 Reading mission definitions from mission.json...", Fore.CYAN)
-            try:
-                with open("mission.json", "r") as f:
-                    static_data = json.load(f)
-            except Exception as e:
-                self.log(f"❌ Failed to read mission.json: {e}", Fore.RED)
-                return
+            # STEP 1: Retrieve mission list to check in-progress status
+            mission_url = f"{self.BASE_URL}mission/list"
+            self.log("🔄 Fetching mission list...", Fore.CYAN)
+            missions = requests.get(mission_url, headers=headers).json().get("result", [])
+            in_progress = set()
+            for m in missions:
+                mid = m.get("mission_id")
+                end_time = m.get("end_time")
+                if mid and end_time and current_time < end_time:
+                    in_progress.add(str(mid))
+                    self.log(f"⚠️ Mission {mid} is still in progress.", Fore.YELLOW)
 
-            static_missions = static_data.get("result", [])
-            if not isinstance(static_missions, list):
-                self.log("❌ Invalid mission.json format (expected a list).", Fore.RED)
-                return
-
-            # --- Sort misi berdasarkan total reward (descending) ---
+            # STEP 2: Load and sort mission definitions from mission.json
+            self.log("🔄 Loading mission definitions from mission.json...", Fore.CYAN)
+            static_missions = json.load(open("mission.json")).get("result", [])
             static_missions.sort(
-                key=lambda m: sum(reward.get("amount", 0) for reward in m.get("rewards", [])),
-                reverse=True
+                key=lambda m: sum(r.get("amount", 0) for r in m.get("rewards", [])),
+                reverse=True,
             )
-            self.log("🔄 Missions sorted based on total reward amounts.", Fore.CYAN)
 
-            # === STEP 3: Fetch pet list from API for assignment ===
+            # STEP 3: Retrieve pet list for simulation
             pet_url = f"{self.BASE_URL}pet/list"
-            self.log("🔄 Fetching the list of pets...", Fore.CYAN)
-            pet_response = requests.get(pet_url, headers=headers)
-            pet_response.raise_for_status()
-            pet_data = pet_response.json()
-            pets = pet_data.get("result", [])
-            if not isinstance(pets, list):
-                self.log("❌ Invalid pet data format (expected a list).", Fore.RED)
-                return
-            self.log("✅ Successfully fetched the list of pets.", Fore.GREEN)
+            self.log("🔄 Fetching pet list...", Fore.CYAN)
+            pets = requests.get(pet_url, headers=headers).json().get("result", [])
 
-            # === STEP 4: Assign pets for missions that are NOT in progress ===
-            self.log("🔍 Filtering missions for pet assignment...", Fore.CYAN)
+            # STEP 4: Deploy all missions in bulk
+            enter_all_url = f"{self.BASE_URL}mission/enter-all"
+            for attempt in (1, 2):
+                self.log(f"🔄 Enter-all attempt #{attempt}...", Fore.CYAN)
+                ea = requests.post(enter_all_url, headers=headers, json={})
+                success = (ea.status_code == 200 and ea.json().get("result", {}).get("status"))
+                if success:
+                    self.log("✅ All missions successfully deployed via enter-all.", Fore.GREEN)
+                    break
+                else:
+                    self.log(f"⚠️ enter-all attempt #{attempt} failed.", Fore.YELLOW)
+
+            # STEP 5: Manual simulation to record missions that failed to start
+            self.log(
+                "➡️ Running manual simulation to log missions not started by enter-all...",
+                Fore.YELLOW,
+            )
+            busy = {}  # Track pet usage during simulation
             for mission_def in static_missions:
-                mission_id = str(mission_def.get("mission_id"))
-                if mission_id in in_progress_ids:
-                    self.log(f"⚠️ Mission {mission_id} skipped (still in progress).", Fore.YELLOW)
+                mid = str(mission_def.get("mission_id"))
+                if mid in in_progress:
+                    self.log(f"⚠️ Skipping mission {mid} (in progress).", Fore.YELLOW)
                     continue
 
-                # Kumpulkan requirement pet dari mission.json (slot 1 sampai 3)
-                required_pets = []
+                # Gather pet requirements
+                requirements = []
                 for i in range(1, 4):
-                    pet_class = mission_def.get(f"pet_{i}_class")
-                    pet_star = mission_def.get(f"pet_{i}_star")
-                    if pet_class is not None and pet_star is not None:
-                        required_pets.append({"class": pet_class, "star": pet_star})
+                    cls = mission_def.get(f"pet_{i}_class")
+                    star = mission_def.get(f"pet_{i}_star")
+                    if cls is not None and star is not None:
+                        requirements.append({"class": cls, "star": star})
 
+                # Try assignment with two criteria: exact match, then relaxed
                 assigned = False
-                # Lakukan assignment dengan 2 round:
-                # round 1 = Exact match, round 2 = Relaxed (star >= requirement)
-                for round_num in [1, 2]:
-                    criteria = "Exact match" if round_num == 1 else "Relaxed star requirement"
-                    self.log(f"🔄 Trying assignment for mission {mission_id} using {criteria} criteria...", Fore.CYAN)
-                    
-                    # Gunakan while loop untuk menangani kemungkinan error PET_BUSY
-                    while True:
-                        # Salin busy_pets sebagai baseline simulasi assignment pada round ini
-                        simulated_busy = busy_pets.copy()
-                        pet_ids = []  # daftar pet id untuk misi saat ini
-
-                        # Proses pemilihan untuk tiap requirement pet
-                        for req in required_pets:
-                            found = False
-                            # Iterasi ke seluruh daftar pets (memungkinkan memilih pet yang sama jika masih tersedia)
-                            for pet in pets:
-                                pet_id = pet.get("pet_id")
-                                # Cek apakah pet ini masih bisa digunakan (tidak mencapai batas amount)
-                                current_usage = simulated_busy.get(pet_id, 0)
-                                available_limit = pet.get("amount", 1)
-                                if current_usage >= available_limit:
-                                    continue
-
-                                # Cek kecocokan berdasarkan class
-                                if pet.get("class") != req["class"]:
-                                    continue
-
-                                pet_star = pet.get("star", 0)
-                                req_star = req["star"]
-                                # Cek kecocokan star berdasarkan round: harus sama pada round 1, cukup >= pada round 2
-                                if (round_num == 1 and pet_star == req_star) or (round_num == 2 and pet_star >= req_star):
-                                    pet_ids.append(pet_id)
-                                    simulated_busy[pet_id] = current_usage + 1
-                                    found = True
-                                    break
-                            if not found:
-                                break  # Satu requirement gagal dipenuhi
-                        # Apabila tidak semua requirement terpenuhi, keluar dari while loop round ini
-                        if len(pet_ids) != len(required_pets):
-                            self.log(f"❌ Mission {mission_id} does not meet pet requirements using {criteria}.", Fore.RED)
-                            break
-
-                        # Jika sudah menemukan pet yang memenuhi, coba assign misi
-                        self.log(f"➡️ Assigning pets to mission {mission_id} using {criteria}...", Fore.CYAN)
-                        enter_url = f"{self.BASE_URL}mission/enter"
-                        payload = {"mission_id": mission_id}
-                        for i, pet_id in enumerate(pet_ids):
-                            payload[f"pet_{i+1}_id"] = pet_id
-                        enter_response = requests.post(enter_url, headers=headers, json=payload)
-                        if enter_response.status_code == 200:
-                            self.log(f"✅ Mission {mission_id} successfully started.", Fore.GREEN)
-                            # Update busy_pets dengan simulasi assignment yang sukses
-                            busy_pets = simulated_busy
-                            assigned = True
-                            break  # Mission berhasil, keluar dari while loop
-                        else:
-                            self.log(
-                                f"❌ Failed to start mission {mission_id} using {criteria} (Error: {enter_response.status_code}).",
-                                Fore.RED
-                            )
-                            self.log(f"🔍 Mission start response details: {enter_response.text}", Fore.RED)
-                            # Bila error PET_BUSY terjadi, retry dengan kombinasi pet berbeda (while loop)
-                            if "PET_BUSY" in enter_response.text:
-                                self.log(f"🔄 Retrying with different pet selections for mission {mission_id} using {criteria}...", Fore.YELLOW)
+                for round_type in (1, 2):
+                    sim_busy = busy.copy()
+                    picked_ids = []
+                    for req in requirements:
+                        match_found = False
+                        for pet in pets:
+                            pid = pet.get("pet_id")
+                            usage = sim_busy.get(pid, 0)
+                            limit = pet.get("amount", 1)
+                            if usage >= limit:
                                 continue
-                            else:
-                                break  # Error lain, keluar dari while loop
-                    # Jika assignment berhasil, tidak perlu coba round kedua
-                    if assigned:
+                            if pet.get("class") != req["class"]:
+                                continue
+                            star = pet.get("star", 0)
+                            if (round_type == 1 and star == req["star"]) or (
+                                round_type == 2 and star >= req["star"]
+                            ):
+                                picked_ids.append(pid)
+                                sim_busy[pid] = usage + 1
+                                match_found = True
+                                break
+                        if not match_found:
+                            break
+                    if len(picked_ids) == len(requirements):
+                        assigned = True
+                        busy = sim_busy
                         break
 
                 if not assigned:
-                    self.log(f"❌ Mission {mission_id} could not be assigned after both rounds.", Fore.RED)
-                    log_failed_mission(mission_id, required_pets)
+                    log_failed_mission(mid, requirements)
 
         except requests.exceptions.RequestException as e:
-            self.log(f"❌ An error occurred while processing: {e}", Fore.RED)
-
+            self.log(f"❌ Network error occurred: {e}", Fore.RED)
 
     def quest(self) -> None:
         """Handles fetching and claiming quests."""
@@ -1382,8 +1625,8 @@ class animix:
         headers: dict,
     ) -> None:
         """
-        Mengecek dan meng-upgrade pet yang memenuhi syarat.
-        Fungsi ini akan terus melakukan pengecekan ulang selama terdapat pet yang diupgrade.
+        Check and upgrade pets that meet the requirements.
+        This function will keep rechecking as long as there are pets to upgrade.
         """
         upgraded_any = True
         while upgraded_any:
@@ -1396,11 +1639,11 @@ class animix:
             if "result" in pets_data and isinstance(pets_data["result"], list):
                 pets = pets_data["result"]
                 for pet in pets:
-                    # Cek pet dengan star minimal 4 dan amount lebih dari 1
+                    # Check pets with a minimum star of 4 and amount greater than 1
                     if pet.get("star", 0) >= 4 and pet.get("amount", 0) > 1:
                         pet_id = pet.get("pet_id")
                         payload = {"pet_id": pet_id}
-                        # Cek kelengkapan upgrade untuk pet tersebut
+                        # Check upgrade requirements for that pet
                         response = requests.get(
                             f"{req_url_upgrade_check}?pet_id={pet_id}",
                             headers=headers,
@@ -1412,7 +1655,7 @@ class animix:
                         if "result" in upgrade_data and isinstance(
                             upgrade_data["result"], dict
                         ):
-                            # Ambil data requirement dan material (diasumsikan dalam list dan ambil elemen pertama)
+                            # Get requirement and material data (assumed to be in a list and take the first element)
                             required = upgrade_data["result"].get("required", [])[0]
                             materials = upgrade_data["result"].get("materials", [])[0]
 
@@ -1458,7 +1701,9 @@ class animix:
 
         # === Upgrade Pets outside the PvP loop ===
         try:
-            self.upgrade_pets(req_url_pets, req_url_upgrade_check, req_url_upgrade, headers)
+            self.upgrade_pets(
+                req_url_pets, req_url_upgrade_check, req_url_upgrade, headers
+            )
         except requests.exceptions.RequestException as e:
             self.log(f"❌ Upgrade process failed: {e}", Fore.RED)
         except Exception as e:
@@ -1472,7 +1717,10 @@ class animix:
                 attribute = self.config["defens_type"].lower()
                 valid_attributes = ["hp", "armor", "damage", "speed"]
                 if attribute not in valid_attributes:
-                    self.log(f"🚫 Invalid defense type: {self.config['defens_type']}", Fore.RED)
+                    self.log(
+                        f"🚫 Invalid defense type: {self.config['defens_type']}",
+                        Fore.RED,
+                    )
                 else:
                     # Fetch the pet list from API
                     response = requests.get(req_url_pets, headers=headers)
@@ -1481,24 +1729,37 @@ class animix:
                     if "result" in pets_data and isinstance(pets_data["result"], list):
                         pets = pets_data["result"]
                         # Select 3 pets with the highest value for the given attribute
-                        best_pets = sorted(pets, key=lambda pet: pet.get(attribute, 0), reverse=True)[:3]
+                        best_pets = sorted(
+                            pets, key=lambda pet: pet.get(attribute, 0), reverse=True
+                        )[:3]
                         if len(best_pets) < 3:
-                            self.log("🚫 Not enough pets to form defense team.", Fore.RED)
+                            self.log(
+                                "🚫 Not enough pets to form defense team.", Fore.RED
+                            )
                         else:
                             payload = {
                                 "pet_id_1": best_pets[0].get("pet_id"),
                                 "pet_id_2": best_pets[1].get("pet_id"),
                                 "pet_id_3": best_pets[2].get("pet_id"),
                             }
-                            response = requests.post(req_url_set_defense, headers=headers, json=payload)
+                            response = requests.post(
+                                req_url_set_defense, headers=headers, json=payload
+                            )
                             response.raise_for_status()
                             defense_result = self.decode_response(response)
-                            if "result" in defense_result and isinstance(defense_result["result"], dict):
-                                self.log("✅ Defense team successfully updated based on attribute selection!", Fore.GREEN)
+                            if "result" in defense_result and isinstance(
+                                defense_result["result"], dict
+                            ):
+                                self.log(
+                                    "✅ Defense team successfully updated based on attribute selection!",
+                                    Fore.GREEN,
+                                )
                             else:
                                 self.log("🚫 Failed to update defense team.", Fore.RED)
                     else:
-                        self.log("🚫 Failed to fetch pet list for defense team.", Fore.RED)
+                        self.log(
+                            "🚫 Failed to fetch pet list for defense team.", Fore.RED
+                        )
             else:
                 # If no defense type is provided, use the list of pet IDs from configuration.
                 if self.config["defens_id"]:
@@ -1508,30 +1769,59 @@ class animix:
                         pet_list = pets_json.get("result", [])
                         chosen_pets = []
                         for pet_id in self.config["defens_id"]:
-                            pet = next((pet for pet in pet_list if pet.get("pet_id") == pet_id), None)
+                            pet = next(
+                                (
+                                    pet
+                                    for pet in pet_list
+                                    if pet.get("pet_id") == pet_id
+                                ),
+                                None,
+                            )
                             if pet:
                                 chosen_pets.append(pet)
                             else:
-                                self.log(f"🚫 Pet with id {pet_id} not found in pets.json.", Fore.RED)
+                                self.log(
+                                    f"🚫 Pet with id {pet_id} not found in pets.json.",
+                                    Fore.RED,
+                                )
                         if len(chosen_pets) < 3:
-                            self.log("🚫 Not enough pets found from pets.json for defense team.", Fore.RED)
+                            self.log(
+                                "🚫 Not enough pets found from pets.json for defense team.",
+                                Fore.RED,
+                            )
                         else:
                             payload = {
                                 "pet_id_1": chosen_pets[0].get("pet_id"),
                                 "pet_id_2": chosen_pets[1].get("pet_id"),
                                 "pet_id_3": chosen_pets[2].get("pet_id"),
                             }
-                            response = requests.post(req_url_set_defense, headers=headers, json=payload)
+                            response = requests.post(
+                                req_url_set_defense, headers=headers, json=payload
+                            )
                             response.raise_for_status()
                             defense_result = self.decode_response(response)
-                            if "result" in defense_result and isinstance(defense_result["result"], dict):
-                                self.log("✅ Defense team successfully updated based on defense IDs!", Fore.GREEN)
+                            if "result" in defense_result and isinstance(
+                                defense_result["result"], dict
+                            ):
+                                self.log(
+                                    "✅ Defense team successfully updated based on defense IDs!",
+                                    Fore.GREEN,
+                                )
                             else:
-                                self.log("🚫 Failed to update defense team using defense IDs.", Fore.RED)
+                                self.log(
+                                    "🚫 Failed to update defense team using defense IDs.",
+                                    Fore.RED,
+                                )
                     except Exception as e:
-                        self.log(f"🚫 Error processing pets.json for defense team: {e}", Fore.RED)
+                        self.log(
+                            f"🚫 Error processing pets.json for defense team: {e}",
+                            Fore.RED,
+                        )
                 else:
-                    self.log("ℹ️ No defense type or defense IDs provided. Skipping defense team setup.", Fore.YELLOW)
+                    self.log(
+                        "ℹ️ No defense type or defense IDs provided. Skipping defense team setup.",
+                        Fore.YELLOW,
+                    )
         except requests.exceptions.RequestException as e:
             self.log(f"🚫 RequestException during defense team setup: {e}", Fore.RED)
         except Exception as e:
@@ -1563,34 +1853,54 @@ class animix:
                     self.log(f"🌟 Season ID: {season_id}", Fore.GREEN)
                     self.log(f"🏆 Tier: {tier_name} (Level {tier})", Fore.GREEN)
                     self.log(f"📊 Score: {score}", Fore.GREEN)
-                    self.log(f"⚔️ Matches Played: {matches} | Wins: {win_matches}", Fore.GREEN)
+                    self.log(
+                        f"⚔️ Matches Played: {matches} | Wins: {win_matches}", Fore.GREEN
+                    )
                     self.log(f"🎟️ Tickets Available: {tickets}", Fore.GREEN)
 
                     # Check for unclaimed rewards and attempt to claim them
                     not_claimed_rewards_info = result.get("not_claimed_rewards_info")
-                    if not_claimed_rewards_info and isinstance(not_claimed_rewards_info, dict):
+                    if not_claimed_rewards_info and isinstance(
+                        not_claimed_rewards_info, dict
+                    ):
                         unclaimed_season_id = not_claimed_rewards_info.get("season_id")
                         if unclaimed_season_id is not None:
-                            self.log(f"🏁 Unclaimed rewards found for season: {unclaimed_season_id}. Claiming rewards...", Fore.CYAN)
+                            self.log(
+                                f"🏁 Unclaimed rewards found for season: {unclaimed_season_id}. Claiming rewards...",
+                                Fore.CYAN,
+                            )
                             req_url_claim = f"{self.BASE_URL}battle/user/reward/claim"
                             payload_claim = {"season_id": unclaimed_season_id}
-                            claim_response = requests.post(req_url_claim, headers=headers, json=payload_claim)
+                            claim_response = requests.post(
+                                req_url_claim, headers=headers, json=payload_claim
+                            )
                             claim_response.raise_for_status()
                             claim_result = self.decode_response(claim_response)
 
-                            if "result" in claim_result and isinstance(claim_result["result"], dict):
+                            if "result" in claim_result and isinstance(
+                                claim_result["result"], dict
+                            ):
                                 self.log("✅ Rewards claimed successfully!", Fore.GREEN)
                                 rewards = claim_result["result"].get("rewards", [])
                                 self.log(f"🎁 Rewards: {rewards}", Fore.GREEN)
                             else:
                                 self.log("🚫 Failed to claim rewards.", Fore.RED)
                         else:
-                            self.log("🚫 No valid season_id found in unclaimed rewards info.", Fore.RED)
+                            self.log(
+                                "🚫 No valid season_id found in unclaimed rewards info.",
+                                Fore.RED,
+                            )
                     else:
-                        self.log("ℹ️ No unclaimed rewards info available. Skipping reward claim.", Fore.YELLOW)
+                        self.log(
+                            "ℹ️ No unclaimed rewards info available. Skipping reward claim.",
+                            Fore.YELLOW,
+                        )
 
                     if tickets <= 0:
-                        self.log("🎟️ No tickets remaining! Ending PvP session... 🚫🏆😔", Fore.YELLOW)
+                        self.log(
+                            "🎟️ No tickets remaining! Ending PvP session... 🚫🏆😔",
+                            Fore.YELLOW,
+                        )
                         break
 
                     if defense_team:
@@ -1598,7 +1908,10 @@ class animix:
                         for idx, pet in enumerate(defense_team, start=1):
                             pet_id = pet.get("pet_id", "Unknown")
                             level = pet.get("level", 0)
-                            self.log(f"   {idx}. Pet ID: {pet_id} | Level: {level}", Fore.BLUE)
+                            self.log(
+                                f"   {idx}. Pet ID: {pet_id} | Level: {level}",
+                                Fore.BLUE,
+                            )
                     else:
                         self.log("🛡️ Defense Team: None", Fore.YELLOW)
 
@@ -1644,18 +1957,25 @@ class animix:
 
                     # Step 3: If tickets are available, fetch opponent information
                     if tickets > 0:
-                        self.log("🎯 Tickets available. Fetching opponent information...", Fore.CYAN)
+                        self.log(
+                            "🎯 Tickets available. Fetching opponent information...",
+                            Fore.CYAN,
+                        )
                         response = requests.get(req_url_opponents, headers=headers)
                         response.raise_for_status()
                         opponent_data = self.decode_response(response)
 
-                        if "result" in opponent_data and isinstance(opponent_data["result"], dict):
+                        if "result" in opponent_data and isinstance(
+                            opponent_data["result"], dict
+                        ):
                             opponent = opponent_data["result"].get("opponent", {})
 
                             # Extract opponent details
                             opponent_id = opponent.get("telegram_id", "Unknown")
                             opponent_name = opponent.get("full_name", "Unknown")
-                            opponent_username = opponent.get("telegram_username", "Unknown")
+                            opponent_username = opponent.get(
+                                "telegram_username", "Unknown"
+                            )
                             opponent_score = opponent.get("score", 0)
                             opponent_pets = opponent.get("pets", [])
 
@@ -1663,35 +1983,58 @@ class animix:
                                 f"🎮 Opponent Found: {opponent_name} (@{opponent_username}) id: {opponent_id}",
                                 Fore.MAGENTA,
                             )
-                            self.log(f"📊 Opponent Score: {opponent_score}", Fore.MAGENTA)
+                            self.log(
+                                f"📊 Opponent Score: {opponent_score}", Fore.MAGENTA
+                            )
                             if opponent_pets:
                                 self.log("🐾 Opponent's Pets:", Fore.BLUE)
                                 for idx, pet in enumerate(opponent_pets, start=1):
                                     pet_id = pet.get("pet_id", "Unknown")
                                     level = pet.get("level", 0)
-                                    self.log(f"   {idx}. Pet ID: {pet_id} | Level: {level}", Fore.BLUE)
+                                    self.log(
+                                        f"   {idx}. Pet ID: {pet_id} | Level: {level}",
+                                        Fore.BLUE,
+                                    )
                             else:
                                 self.log("🐾 Opponent's Pets: None", Fore.YELLOW)
 
                             # Step 4: Execute attack if opponent and best pets are available
                             if opponent_id != "Unknown" and len(best_pets) == 3:
                                 self.log("⚔️ Preparing to execute attack...", Fore.CYAN)
-                                
+
                                 # Determine the attack team based on configuration
                                 chosen_pets = None
                                 if self.config.get("attack_type"):
                                     attribute = self.config["attack_type"].lower()
-                                    valid_attributes = ["hp", "armor", "damage", "speed"]
+                                    valid_attributes = [
+                                        "hp",
+                                        "armor",
+                                        "damage",
+                                        "speed",
+                                    ]
                                     if attribute not in valid_attributes:
-                                        self.log(f"🚫 Invalid attack type: {self.config['attack_type']}", Fore.RED)
+                                        self.log(
+                                            f"🚫 Invalid attack type: {self.config['attack_type']}",
+                                            Fore.RED,
+                                        )
                                         chosen_pets = best_pets
                                     else:
-                                        chosen_pets = sorted(pets, key=lambda pet: pet.get(attribute, 0), reverse=True)[:3]
+                                        chosen_pets = sorted(
+                                            pets,
+                                            key=lambda pet: pet.get(attribute, 0),
+                                            reverse=True,
+                                        )[:3]
                                         if len(chosen_pets) < 3:
-                                            self.log("🚫 Not enough pets to form attack team based on attribute.", Fore.RED)
+                                            self.log(
+                                                "🚫 Not enough pets to form attack team based on attribute.",
+                                                Fore.RED,
+                                            )
                                             chosen_pets = best_pets
                                         else:
-                                            self.log(f"✅ Attack team selected based on {attribute}.", Fore.GREEN)
+                                            self.log(
+                                                f"✅ Attack team selected based on {attribute}.",
+                                                Fore.GREEN,
+                                            )
                                 elif self.config.get("attack_id"):
                                     try:
                                         with open("pets.json", "r") as f:
@@ -1699,18 +2042,37 @@ class animix:
                                         pet_list = pets_json.get("result", [])
                                         chosen_pets = []
                                         for pet_id in self.config["attack_id"]:
-                                            pet = next((pet for pet in pet_list if pet.get("pet_id") == pet_id), None)
+                                            pet = next(
+                                                (
+                                                    pet
+                                                    for pet in pet_list
+                                                    if pet.get("pet_id") == pet_id
+                                                ),
+                                                None,
+                                            )
                                             if pet:
                                                 chosen_pets.append(pet)
                                             else:
-                                                self.log(f"🚫 Pet with id {pet_id} not found in pets.json.", Fore.RED)
+                                                self.log(
+                                                    f"🚫 Pet with id {pet_id} not found in pets.json.",
+                                                    Fore.RED,
+                                                )
                                         if len(chosen_pets) < 3:
-                                            self.log("🚫 Not enough pets found from pets.json for attack team.", Fore.RED)
+                                            self.log(
+                                                "🚫 Not enough pets found from pets.json for attack team.",
+                                                Fore.RED,
+                                            )
                                             chosen_pets = best_pets
                                         else:
-                                            self.log("✅ Attack team selected based on attack IDs.", Fore.GREEN)
+                                            self.log(
+                                                "✅ Attack team selected based on attack IDs.",
+                                                Fore.GREEN,
+                                            )
                                     except Exception as e:
-                                        self.log(f"🚫 Error processing pets.json for attack team: {e}", Fore.RED)
+                                        self.log(
+                                            f"🚫 Error processing pets.json for attack team: {e}",
+                                            Fore.RED,
+                                        )
                                         chosen_pets = best_pets
                                 else:
                                     # Fallback mechanism: select attack pets based on enemy pet statistics
@@ -1718,13 +2080,18 @@ class animix:
                                         try:
                                             with open("pets.json", "r") as f:
                                                 pets_json = json.load(f)
-                                            enemy_pet_db = {pet["pet_id"]: pet for pet in pets_json.get("result", [])}
+                                            enemy_pet_db = {
+                                                pet["pet_id"]: pet
+                                                for pet in pets_json.get("result", [])
+                                            }
                                             selected_pets = []
                                             remaining_candidates = pets.copy()
                                             for enemy in opponent_pets:
                                                 enemy_pet_id = enemy.get("pet_id")
                                                 if enemy_pet_id in enemy_pet_db:
-                                                    enemy_stats = enemy_pet_db[enemy_pet_id]
+                                                    enemy_stats = enemy_pet_db[
+                                                        enemy_pet_id
+                                                    ]
                                                     enemy_total = (
                                                         enemy_stats.get("hp", 0)
                                                         + enemy_stats.get("damage", 0)
@@ -1732,11 +2099,15 @@ class animix:
                                                         + enemy_stats.get("armor", 0)
                                                     )
                                                     suitable_candidates = [
-                                                        pet for pet in remaining_candidates
-                                                        if (pet.get("hp", 0)
+                                                        pet
+                                                        for pet in remaining_candidates
+                                                        if (
+                                                            pet.get("hp", 0)
                                                             + pet.get("damage", 0)
                                                             + pet.get("speed", 0)
-                                                            + pet.get("armor", 0)) > enemy_total
+                                                            + pet.get("armor", 0)
+                                                        )
+                                                        > enemy_total
                                                     ]
                                                     if suitable_candidates:
                                                         chosen = min(
@@ -1746,69 +2117,131 @@ class animix:
                                                                 + pet.get("damage", 0)
                                                                 + pet.get("speed", 0)
                                                                 + pet.get("armor", 0)
-                                                            ) - enemy_total,
+                                                            )
+                                                            - enemy_total,
                                                         )
                                                         selected_pets.append(chosen)
-                                                        remaining_candidates.remove(chosen)
+                                                        remaining_candidates.remove(
+                                                            chosen
+                                                        )
                                                     else:
-                                                        self.log(f"🚫 No pet found that can outperform enemy pet ID {enemy_pet_id}.", Fore.YELLOW)
-                                                        raise Exception("No suitable pet found")
+                                                        self.log(
+                                                            f"🚫 No pet found that can outperform enemy pet ID {enemy_pet_id}.",
+                                                            Fore.YELLOW,
+                                                        )
+                                                        raise Exception(
+                                                            "No suitable pet found"
+                                                        )
                                                 else:
-                                                    self.log(f"🚫 Enemy pet details for ID {enemy_pet_id} not found in pets.json.", Fore.YELLOW)
-                                                    raise Exception("Incomplete enemy pet data")
+                                                    self.log(
+                                                        f"🚫 Enemy pet details for ID {enemy_pet_id} not found in pets.json.",
+                                                        Fore.YELLOW,
+                                                    )
+                                                    raise Exception(
+                                                        "Incomplete enemy pet data"
+                                                    )
                                             if len(selected_pets) == 3:
-                                                self.log("✅ Selected pets for attack based on superior statistics.", Fore.GREEN)
+                                                self.log(
+                                                    "✅ Selected pets for attack based on superior statistics.",
+                                                    Fore.GREEN,
+                                                )
                                                 chosen_pets = selected_pets
                                             else:
-                                                self.log("🚫 Insufficient number of selected pets. Using best pets as fallback.", Fore.YELLOW)
+                                                self.log(
+                                                    "🚫 Insufficient number of selected pets. Using best pets as fallback.",
+                                                    Fore.YELLOW,
+                                                )
                                                 chosen_pets = best_pets
                                         except Exception as e:
-                                            self.log(f"🚫 Failed to select pets based on statistics: {e}. Using best pets as fallback.", Fore.YELLOW)
+                                            self.log(
+                                                f"🚫 Failed to select pets based on statistics: {e}. Using best pets as fallback.",
+                                                Fore.YELLOW,
+                                            )
                                             chosen_pets = best_pets
                                     else:
-                                        self.log("🚫 Opponent pet count not matching expected count. Using best pets.", Fore.YELLOW)
+                                        self.log(
+                                            "🚫 Opponent pet count not matching expected count. Using best pets.",
+                                            Fore.YELLOW,
+                                        )
                                         chosen_pets = best_pets
 
-                                self.log("⚔️ Executing attack with selected pets...", Fore.CYAN)
+                                self.log(
+                                    "⚔️ Executing attack with selected pets...",
+                                    Fore.CYAN,
+                                )
                                 payload = {
                                     "opponent_id": opponent_id,
                                     "pet_id_1": chosen_pets[0].get("pet_id"),
                                     "pet_id_2": chosen_pets[1].get("pet_id"),
                                     "pet_id_3": chosen_pets[2].get("pet_id"),
                                 }
-                                response = requests.post(req_url_attack, headers=headers, json=payload)
+                                response = requests.post(
+                                    req_url_attack, headers=headers, json=payload
+                                )
                                 response.raise_for_status()
                                 attack_result = self.decode_response(response)
 
-                                if "result" in attack_result and isinstance(attack_result["result"], dict):
+                                if "result" in attack_result and isinstance(
+                                    attack_result["result"], dict
+                                ):
                                     result_data = attack_result["result"]
                                     is_win = result_data.get("is_win", False)
                                     score_gained = result_data.get("score", 0)
-                                    tickets = result_data.get("ticket", {}).get("amount", 0)
+                                    tickets = result_data.get("ticket", {}).get(
+                                        "amount", 0
+                                    )
 
                                     self.log("🏅 Attack Results:", Fore.GREEN)
-                                    for idx, round_info in enumerate(result_data.get("rounds", []), start=1):
-                                        attacker_id = round_info.get("attacker_pet_id", "Unknown")
-                                        defender_id = round_info.get("defender_pet_id", "Unknown")
-                                        round_result = "Win" if round_info.get("result", False) else "Lose"
-                                        self.log(f"   Round {idx}: Attacker {attacker_id} vs Defender {defender_id} - {round_result}", Fore.GREEN)
+                                    for idx, round_info in enumerate(
+                                        result_data.get("rounds", []), start=1
+                                    ):
+                                        attacker_id = round_info.get(
+                                            "attacker_pet_id", "Unknown"
+                                        )
+                                        defender_id = round_info.get(
+                                            "defender_pet_id", "Unknown"
+                                        )
+                                        round_result = (
+                                            "Win"
+                                            if round_info.get("result", False)
+                                            else "Lose"
+                                        )
+                                        self.log(
+                                            f"   Round {idx}: Attacker {attacker_id} vs Defender {defender_id} - {round_result}",
+                                            Fore.GREEN,
+                                        )
 
                                     if is_win:
-                                        self.log(f"🎉 Victory! Gained Score: {score_gained}", Fore.GREEN)
+                                        self.log(
+                                            f"🎉 Victory! Gained Score: {score_gained}",
+                                            Fore.GREEN,
+                                        )
                                     else:
                                         self.log("💔 Defeat!", Fore.RED)
-                                    self.log(f"🎟️ Tickets Remaining: {tickets}", Fore.GREEN)
+                                    self.log(
+                                        f"🎟️ Tickets Remaining: {tickets}", Fore.GREEN
+                                    )
 
                                     if tickets <= 0:
-                                        self.log("🎟️ No tickets remaining. Ending PvP session.", Fore.YELLOW)
+                                        self.log(
+                                            "🎟️ No tickets remaining. Ending PvP session.",
+                                            Fore.YELLOW,
+                                        )
                                         break
                                 else:
-                                    self.log("🚫 Failed to process attack results.", Fore.RED)
+                                    self.log(
+                                        "🚫 Failed to process attack results.", Fore.RED
+                                    )
                         else:
-                            self.log("🚫 Failed to fetch opponent information.", Fore.RED)
+                            self.log(
+                                "🚫 Failed to fetch opponent information.", Fore.RED
+                            )
 
                 else:
-                    self.log("🚫 Failed to retrieve PvP information. No result found.", Fore.RED)
+                    self.log(
+                        "🚫 Failed to retrieve PvP information. No result found.",
+                        Fore.RED,
+                    )
 
         except requests.exceptions.RequestException as e:
             self.log(f"🚫 RequestException encountered: {e}", Fore.RED)
@@ -1889,6 +2322,7 @@ class animix:
 
     def override_requests(self):
         import random
+
         """Override requests functions globally when proxy is enabled."""
         if self.config.get("proxy", False):
             self.log("[CONFIG] 🛡️ Proxy: ✅ Enabled", Fore.YELLOW)
@@ -1910,22 +2344,25 @@ class animix:
 
 
 async def process_account(account, original_index, account_label, ani, config):
-    # Menampilkan informasi akun
+    ua = UserAgent()
+    ani.HEADERS["user-agent"] = ua.random
+    
+    # Display account information
     display_account = account[:10] + "..." if len(account) > 10 else account
     ani.log(f"👤 Processing {account_label}: {display_account}", Fore.YELLOW)
-    
-    # Override proxy jika diaktifkan
+
+    # Override proxy if enabled
     if config.get("proxy", False):
         ani.override_requests()
     else:
         ani.log("[CONFIG] Proxy: ❌ Disabled", Fore.RED)
-    
-    # Login (fungsi blocking, dijalankan di thread terpisah) dengan menggunakan index asli (integer)
+
+    # Login (blocking function, run in a separate thread) using the original index (integer)
     await asyncio.to_thread(ani.login, original_index)
-    
+
     ani.log("🛠️ Starting task execution...", Fore.CYAN)
     tasks_config = {
-       "achievements": "🏆 Achievements",
+        "achievements": "🏆 Achievements",
         "mission": "📜 Missions",
         "quest": "🗺️ Quests",
         "gacha": "🎰 Gacha",
@@ -1933,23 +2370,30 @@ async def process_account(account, original_index, account_label, ani, config):
         "claim_pass": "🎟️ Claiming Pass Rewards",
         "pvp": "⚔️ PvP Battles",
     }
-    
+
     for task_key, task_name in tasks_config.items():
         task_status = config.get(task_key, False)
         color = Fore.YELLOW if task_status else Fore.RED
-        ani.log(f"[CONFIG] {task_name}: {'✅ Enabled' if task_status else '❌ Disabled'}", color)
+        ani.log(
+            f"[CONFIG] {task_name}: {'✅ Enabled' if task_status else '❌ Disabled'}",
+            color,
+        )
         if task_status:
             ani.log(f"🔄 Executing {task_name}...", Fore.CYAN)
             await asyncio.to_thread(getattr(ani, task_key))
-    
+
     delay_switch = config.get("delay_account_switch", 10)
-    ani.log(f"➡️ Finished processing {account_label}. Waiting {Fore.WHITE}{delay_switch}{Fore.CYAN} seconds before next account.", Fore.CYAN)
+    ani.log(
+        f"➡️ Finished processing {account_label}. Waiting {Fore.WHITE}{delay_switch}{Fore.CYAN} seconds before next account.",
+        Fore.CYAN,
+    )
     await asyncio.sleep(delay_switch)
+
 
 async def worker(worker_id, ani, config, queue):
     """
-    Setiap worker akan mengambil satu akun dari antrian dan memprosesnya secara berurutan.
-    Worker tidak akan mengambil akun baru sebelum akun sebelumnya selesai diproses.
+    Each worker will take one account from the queue and process it sequentially.
+    The worker will not take a new account until the previous account is processed.
     """
     while True:
         try:
@@ -1961,38 +2405,48 @@ async def worker(worker_id, ani, config, queue):
         queue.task_done()
     ani.log(f"Worker-{worker_id} finished processing all assigned accounts.", Fore.CYAN)
 
+
 async def main():
-    ani = animix()  # Inisialisasi instance class animix Anda
+    ani = animix()  # Initialize your animix class instance
     config = ani.load_config()
     all_accounts = ani.query_list
-    num_threads = config.get("thread", 1)  # Jumlah worker sesuai konfigurasi
-    
+    num_threads = config.get("thread", 1)  # Number of workers as per configuration
+
     if config.get("proxy", False):
         proxies = ani.load_proxies()
-    
-    ani.log("🎉 === Welcome to Animix Automation ===", Fore.YELLOW)
+
+    ani.log(
+        "🎉 [LIVEXORDS] === Welcome to Animix Automation === [LIVEXORDS]", Fore.YELLOW
+    )
     ani.log(f"📂 Loaded {len(all_accounts)} accounts from query list.", Fore.YELLOW)
-    
+
     while True:
-        # Buat queue baru dan masukkan semua akun (dengan index asli)
+        # Create a new queue and add all accounts (with original index)
         queue = asyncio.Queue()
         for idx, account in enumerate(all_accounts):
             queue.put_nowait((idx, account))
-        
-        # Buat task worker sesuai dengan jumlah thread yang diinginkan
-        workers = [asyncio.create_task(worker(i+1, ani, config, queue)) for i in range(num_threads)]
-        
-        # Tunggu hingga semua akun di queue telah diproses
+
+        # Create worker tasks as per the desired number of threads
+        workers = [
+            asyncio.create_task(worker(i + 1, ani, config, queue))
+            for i in range(num_threads)
+        ]
+
+        # Wait until all accounts in the queue have been processed
         await queue.join()
-        
-        # Opsional: batalkan task worker (agar tidak terjadi tumpang tindih)
+
+        # Optional: cancel worker tasks (to avoid overlap)
         for w in workers:
             w.cancel()
-        
+
         ani.log("🔁 All accounts processed. Restarting loop.", Fore.CYAN)
         delay_loop = config.get("delay_loop", 30)
-        ani.log(f"⏳ Sleeping for {Fore.WHITE}{delay_loop}{Fore.CYAN} seconds before restarting.", Fore.CYAN)
+        ani.log(
+            f"⏳ Sleeping for {Fore.WHITE}{delay_loop}{Fore.CYAN} seconds before restarting.",
+            Fore.CYAN,
+        )
         await asyncio.sleep(delay_loop)
+
 
 if __name__ == "__main__":
     asyncio.run(main())
