@@ -1096,92 +1096,87 @@ class animix:
                     continue
                 break
 
-            # -------------------------------------------
-            # Random mixing (old method)
-            # -------------------------------------------
-            self.log("🔄 Mixing remaining DNA (star below 5)...", Fore.CYAN)
-            n = len(dna_list)
-            for i in range(n):
-                if str(dna_list[i]["item_id"]) in config_ids:
-                    continue
-                if dna_list[i].get("amount", 0) <= 0:
-                    continue
-                for j in range(i + 1, n):
-                    if str(dna_list[j]["item_id"]) in config_ids:
-                        continue
-                    if dna_list[j].get("amount", 0) <= 0:
-                        continue
-                    if dna_list[i]["star"] < 5 and dna_list[j]["star"] < 5:
-                        payload = {
-                            "dad_id": dna_list[i]["item_id"],
-                            "mom_id": dna_list[j]["item_id"],
-                        }
+# -------------------------------------------
+# Random mixing (old method)
+# -------------------------------------------
+self.log("🔄 Mixing remaining DNA (star below 5)...", Fore.CYAN)
+n = len(dna_list)
+for i in range(n):
+    if str(dna_list[i]["item_id"]) in config_ids:
+        continue
+    if dna_list[i].get("amount", 0) <= 0:
+        continue
+    for j in range(i + 1, n):
+        if str(dna_list[j]["item_id"]) in config_ids:
+            continue
+        if dna_list[j].get("amount", 0) <= 0:
+            continue
+        if dna_list[i]["star"] < 5 and dna_list[j]["star"] < 5:
+            payload = {
+                "dad_id": dna_list[i]["item_id"],
+                "mom_id": dna_list[j]["item_id"],
+            }
+            self.log(
+                f"🔄 Mixing DNA pair: Item IDs ({dna_list[i]['item_id']}, {dna_list[j]['item_id']})",
+                Fore.CYAN,
+            )
+            while True:
+                try:
+                    mix_response = requests.post(
+                        mix_url, headers=headers, json=payload, timeout=10
+                    )
+                    if mix_response.status_code == 200:
+                        mix_data = self.decode_response(mix_response)
+                        if (
+                            "result" in mix_data
+                            and "pet" in mix_data["result"]
+                        ):
+                            pet_info = mix_data["result"]["pet"]
+                            self.log(
+                                f"🎉 New pet created: {pet_info['name']} (ID: {pet_info['pet_id']})",
+                                Fore.GREEN,
+                            )
+                            successful_mixes.append(
+                                {
+                                    "pet_name": pet_info.get("name", "Unknown"),
+                                    "pet_id": pet_info.get("pet_id", "N/A"),
+                                    "pet_class": pet_info.get("class", "N/A"),
+                                    "pet_star": str(pet_info.get("star", "N/A")),
+                                    "dna": {
+                                        "dna1id": dna_list[i]["item_id"],
+                                        "dna2id": dna_list[j]["item_id"],
+                                    },
+                                }
+                            )
+                            break
+                        else:
+                            message = mix_data.get("message", "No message provided.")
+                            self.log(
+                                f"⚠️ Mixing failed for DNA pair ({dna_list[i]['item_id']}, {dna_list[j]['item_id']}): {message}",
+                                Fore.YELLOW,
+                            )
+                            break
+                    elif mix_response.status_code == 429:
                         self.log(
-                            f"🔄 Mixing DNA pair: Item IDs ({dna_list[i]['item_id']}, {dna_list[j]['item_id']})",
-                            Fore.CYAN,
+                            "⏳ Too many requests (429). Retrying in 10 seconds...",
+                            Fore.YELLOW,
                         )
-                        while True:
-                            try:
-                                mix_response = requests.post(
-                                    mix_url, headers=headers, json=payload, timeout=10
-                                )
-                                if mix_response.status_code == 200:
-                                    mix_data = self.decode_response(mix_response)
-                                    if (
-                                        "result" in mix_data
-                                        and "pet" in mix_data["result"]
-                                    ):
-                                        pet_info = mix_data["result"]["pet"]
-                                        self.log(
-                                            f"🎉 New pet created: {pet_info['name']} (ID: {pet_info['pet_id']})",
-                                            Fore.GREEN,
-                                        )
-                                        successful_mixes.append(
-                                            {
-                                                "pet_name": pet_info.get(
-                                                    "name", "Unknown"
-                                                ),
-                                                "pet_id": pet_info.get("pet_id", "N/A"),
-                                                "pet_class": pet_info.get(
-                                                    "class", "N/A"
-                                                ),
-                                                "pet_star": str(
-                                                    pet_info.get("star", "N/A")
-                                                ),
-                                                "dna": {
-                                                    "dna1id": dna_list[i]["item_id"],
-                                                    "dna2id": dna_list[j]["item_id"],
-                                                },
-                                            }
-                                        )
-                                        break
-                                    else:
-                                        message = mix_data.get(
-                                            "message", "No message provided."
-                                        )
-                                        self.log(
-                                            f"⚠️ Mixing failed for DNA pair ({dna_list[i]['item_id']}, {dna_list[j]['item_id']}): {message}",
-                                            Fore.YELLOW,
-                                        )
-                                        break
-                                elif mix_response.status_code == 429:
-                                    self.log(
-                                        "⏳ Too many requests (429). Retrying in 10 seconds...",
-                                        Fore.YELLOW,
-                                    )
-                                    time.sleep(10)
-                                else:
-                                    self.log(
-                                        f"❌ Request failed for DNA pair ({dna_list[i]['item_id']}, {dna_list[j]['item_id']}) (Status: {mix_response.status_code})",
-                                        Fore.RED,
-                                    )
-                                    break
-                            except requests.exceptions.RequestException as e:
-                                self.log(
-                                    f"❌ Request failed for DNA pair ({dna_list[i]['item_id']}, {dna_list[j]['item_id']}): {e}",
-                                    Fore.RED,
-                                )
-                                break
+                        time.sleep(10)
+                    else:
+                        self.log(
+                            f"❌ Request failed for DNA pair ({dna_list[i]['item_id']}, {dna_list[j]['item_id']}) (Status: {mix_response.status_code})",
+                            Fore.RED,
+                        )
+                        break
+                except requests.exceptions.RequestException as e:
+                    self.log(
+                        f"❌ Request failed for DNA pair ({dna_list[i]['item_id']}, {dna_list[j]['item_id']}): {e}",
+                        Fore.RED,
+                    )
+                    break
+            # Delay after every mix attempt (successful or failed, except when retrying 429)
+            time.sleep(3)
+
 
             # -------------------------------------------
             # At the end of the function, send the successful mix log to the external API
